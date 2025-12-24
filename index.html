@@ -1,0 +1,467 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>South Bronx Studio</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .sidebar{width:350px;transition:width .22s ease, transform .22s ease;}
+    .sidebar.collapsed{width:72px;}
+    .sidebar .panel{display:block}
+    .sidebar.collapsed .panel{display:none}
+    .sidebar .rail-justify{justify-content:flex-start}
+    .sidebar.collapsed .brand-text{display:none}
+    @media (max-width: 767px){
+      .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%)}
+      .sidebar.open{transform:translateX(0)}
+      .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:saturate(120%) blur(2px);z-index:30;display:none}
+      .backdrop.show{display:block}
+    }
+    .debug-panel{
+      position:fixed;left:8px;bottom:8px;z-index:9999;
+      max-width:320px;max-height:40vh;overflow:auto;
+      background:#fff;border:1px solid #ddd;border-radius:8px;
+      box-shadow:0 2px 10px rgba(0,0,0,.08);
+      padding:8px;font:12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif
+    }
+    .debug-panel h4{margin:0 0 6px 0;font-size:12px}
+  </style>
+</head>
+
+<body class="h-screen w-screen overflow-hidden bg-neutral-50 grid grid-rows-[auto_1fr]">
+  
+  <!-- Header stretched across the top -->
+  <header class="flex items-center gap-3 p-4 border-b-2 border-black bg-white z-10">
+    <div id="brandLogo" class="shrink-0 grid place-items-center h-10 w-10 rounded-lg bg-white text-white font-bold cursor-pointer" title="Collapse/Expand">
+      <img src="./assets/MIT.svg" class="scale-[1.2]" >
+    </div>
+    <div class="brand-text flex items-center gap-3">
+      <img src="./assets/SA+P.svg" class="h-8 scale-[0.75]"/>
+      <img src="./assets/SBX.svg" class="h-8 ml-[70px] scale-[1.3]"/>
+    </div>
+  </header>
+
+  <!-- Main content area: sidebar + map -->
+  <div class="flex h-full w-full overflow-hidden">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="sidebar bg-white border-r border-neutral-200 grid grid-rows-[auto_1fr] shadow-sm w-[450px] max-w-[450px] flex-none">
+      
+      <div class="flex h-full">
+        <nav class="rail-justify flex flex-col items-center gap-2 p-3 border-r border-neutral-200" role="tablist" aria-orientation="vertical">
+          <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" aria-selected="true" data-tab="background" role="tab" aria-controls="background" title="background">B</button>
+          <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold  aria-selected:bg-[#c0c0c0] aria-selected:text-white"  data-tab="layers" role="tab" aria-controls="layers" title="Walkability">W</button>
+          <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold  aria-selected:bg-[#c0c0c0] aria-selected:text-white"  data-tab="layers" role="tab" aria-controls="layers" title="Energy">E</button>
+          <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold  aria-selected:bg-[#c0c0c0] aria-selected:text-white"  data-tab="layers" role="tab" aria-controls="layers" title="Layers">L</button>
+        </nav>
+
+        <section class="panel flex-1 overflow-y-auto p-4">
+          <div id="background" class="tab-content space-y-2 text-sm" role="tabpanel">
+            <ul class="list-disc pl-5 space-y-2">
+              <h1><strong>Background</strong></h1>
+              <li>The South Bronx is home to a storied history of changemakers and activism...</li>
+              <h1><strong>Objectives</strong></h1>
+              <li>This joint studio-practicum aims to answer a series of questions...</li>
+            </ul>
+          </div>
+
+          <div id="layers" class="tab-content hidden space-y-2 text-sm" role="tabpanel">
+            <p><strong>Layers</strong> controls.</p>
+            <ul class="space-y-2">
+              <li class="flex items-center gap-2">
+                <input id="cbPeds" type="checkbox" class="h-4 w-4">
+                <span>Pedestrian Density</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <input id="cbVehicles" type="checkbox" class="h-4 w-4">
+                <span>Vehicle Density</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <input id="cbPOIs" type="checkbox" class="h-4 w-4">
+                <span>POIs</span>
+              </li>
+            </ul>
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <!-- Map -->
+    <div id="map" class="flex-1 h-full relative"></div>
+  </div>
+
+  <script>
+    const sidebar = document.getElementById('sidebar');
+    const brandLogo = document.getElementById('brandLogo');
+    const saved = localStorage.getItem('sidebar-collapsed');
+    if (saved === 'true') sidebar.classList.add('collapsed');
+    brandLogo.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+      localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+    });
+
+    const railBtns = Array.from(document.querySelectorAll('.rail-btn'));
+    const tabs = Array.from(document.querySelectorAll('.tab'));
+    const panels = Array.from(document.querySelectorAll('.tab-content'));
+    function activateTab(id){
+      railBtns.forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
+      tabs.forEach(t => {
+        const active = t.dataset.tab === id;
+        t.classList.toggle('bg-black', active);
+        t.classList.toggle('text-white', active);
+        t.classList.toggle('bg-neutral-200', !active);
+      });
+      panels.forEach(p => p.classList.toggle('hidden', p.id !== id));
+    }
+    railBtns.forEach(b => b.addEventListener('click', () => activateTab(b.dataset.tab)));
+    tabs.forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
+    activateTab('background');
+  </script>
+
+  <!-- Using Mapbox GL JS (supports both Mapbox and MapTiler) -->
+  <link href='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.css' rel='stylesheet' />
+  <script src='https://api.mapbox.com/mapbox-gl-js/v2.15.0/mapbox-gl.js'></script>
+
+  <script>
+    // Minimal debug
+    const dbg = document.createElement('div');
+    dbg.className = 'debug-panel';
+    dbg.innerHTML = '<h4>Map debug</h4><div id="debugLog"></div>';
+    document.body.appendChild(dbg);
+    function debugLog(msg){
+      const el = document.getElementById('debugLog');
+      const p = document.createElement('div');
+      p.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      el.appendChild(p); el.scrollTop = el.scrollHeight; console.log(msg);
+    }
+
+    // Mapbox access token (required for Mapbox tilesets)
+    mapboxgl.accessToken = 'pk.eyJ1IjoiZGFuaWVsaGFyaWFudG8iLCJhIjoiY21ncm1kamttMm00ejJsb2tseGlla2NhOCJ9.ZF71BICne61VFpgz1tjYBA';
+    
+    // MapTiler API key (for basemaps)
+    const MAPTILER_KEY = "4Tv5oKoyHjdzVgcIN79S";
+
+    // --- HYBRID LAYER MANAGER (Mapbox Tilesets + MapTiler Basemaps) ---
+    class HybridLayerManager {
+      constructor(map){
+        this.map = map;
+        this.layers = {};
+        this.visibility = {};
+        
+        // Re-add layers when style changes
+        map.on('styledata', () => {
+          setTimeout(() => this.rebuild(), 100);
+        });
+      }
+      
+      addTilesetLayer({key, tilesetId, layerId, sourceLayer, type='line', paint={}, layout={}}){
+        this.layers[key] = { 
+          tilesetId, 
+          layerId, 
+          sourceLayer, 
+          type, 
+          paint: {...paint},
+          layout: {...layout}
+        };
+        this.visibility[key] = true;
+        this._add(key);
+      }
+      
+      _add(key){
+        const l = this.layers[key];
+        if (!l) return;
+        
+        // Remove existing layer if it exists
+        if (this.map.getLayer(l.layerId)) {
+          this.map.removeLayer(l.layerId);
+        }
+        
+        // Check if source already exists
+        const sourceId = `${key}-source`;
+        if (!this.map.getSource(sourceId)) {
+          this.map.addSource(sourceId, {
+            type: 'vector',
+            url: `mapbox://${l.tilesetId}`
+          });
+        }
+        
+        // Add layer
+        this.map.addLayer({
+          id: l.layerId,
+          type: l.type,
+          source: sourceId,
+          'source-layer': l.sourceLayer,
+          layout: {
+            ...l.layout,
+            visibility: this.visibility[key] ? 'visible' : 'none'
+          },
+          paint: l.paint
+        });
+        
+        debugLog(`added tileset layer: ${key} (${l.tilesetId})`);
+      }
+      
+      setVisible(key, visible){
+        const l = this.layers[key];
+        if (!l || !this.map.getLayer(l.layerId)) return;
+        
+        this.visibility[key] = visible;
+        this.map.setLayoutProperty(l.layerId, 'visibility', visible ? 'visible' : 'none');
+      }
+      
+      rebuild(){
+        Object.keys(this.layers).forEach(key => this._add(key));
+        debugLog('Tileset layers rebuilt after basemap change');
+      }
+    }
+
+    // Map initialization with MapTiler basemap
+    debugLog('Creating map with MapTiler basemap...');
+    const map = new mapboxgl.Map({
+      container: "map",
+      style: `https://api.maptiler.com/maps/0199c990-d557-79f4-a316-082733fdc6a6/style.json?key=${MAPTILER_KEY}`,
+      center: [-73.915, 40.805],
+      zoom: 15,
+      pitch: 52,
+      bearing: 8.6,
+      attributionControl: false
+    });
+    map.addControl(new mapboxgl.NavigationControl(), "top-right");
+    map.addControl(new mapboxgl.AttributionControl({ compact: true }));
+
+    const layerManager = new HybridLayerManager(map);
+
+    // Define your Mapbox tileset layers - replace with your actual tileset IDs
+    const PEDS_LAYER = {
+      key: 'peds',
+      tilesetId: 'danielharianto.as75q55k', 
+      layerId: 'peds-layer',
+      sourceLayer: 'Peds_Analysis-1oesar', 
+      type: 'line',
+      paint: {
+        'line-color': [
+          'interpolate',
+          ['linear'],
+          ['get', 'Res_Rational'],
+          // [value, color] pairs - these create your gradient stops
+          0, '#ffffd4',      // Light yellow for low values
+          10, '#fff8c7',     // Very light yellow
+          20, '#fff1ba',     // Light cream
+          50, '#fedf99',     // Light orange
+          70, '#fed080',     // Orange
+          100, '#febb5e',    // Medium orange
+          150, '#fe9829',    // Dark orange
+          210, '#f68d23',    // Orange-red
+          350, '#e97719',    // Red-orange
+          500, '#d59929',    // Brown-orange
+          1200, '#b24508',   // Dark brown
+          5000, '#9d3605',   // Very dark brown
+          5001, '#7c2d04'    // Darkest brown
+        ],
+        'line-width': 10,
+        'line-opacity': 0.9
+      },
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      }
+    };
+
+    const VEHICLES_LAYER = {
+      key: 'vehicles',
+      tilesetId: 'your-username.your-vehicles-tileset-id', // Replace with your tileset ID
+      layerId: 'vehicles-layer',
+      sourceLayer: 'your-source-layer-name', // The source layer name in your tileset
+      type: 'line',
+      paint: {
+        'line-color': '#1d4ed8',
+        'line-width': 2,
+        'line-opacity': 1
+      },
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
+      }
+    };
+
+    const POIS_LAYER = {
+      key: 'pois',
+      tilesetId: 'your-username.your-pois-tileset-id', // Replace with your tileset ID
+      layerId: 'pois-layer',
+      sourceLayer: 'your-source-layer-name', // The source layer name in your tileset
+      type: 'circle',
+      paint: {
+        'circle-radius': 5,
+        'circle-color': '#22c55e',
+        'circle-opacity': 0.8
+      }
+    };
+
+    map.on('load', () => {
+      // Add your Mapbox tileset layers
+      layerManager.addTilesetLayer(PEDS_LAYER);
+      // Uncomment when you have the data:
+      // layerManager.addTilesetLayer(VEHICLES_LAYER);
+      // layerManager.addTilesetLayer(POIS_LAYER);
+
+      // Wire checkboxes to layer visibility
+      const cbPeds = document.getElementById('cbPeds');
+      const cbVehicles = document.getElementById('cbVehicles');
+      const cbPOIs = document.getElementById('cbPOIs');
+
+      const applyLayerVisibility = () => {
+        layerManager.setVisible('peds', cbPeds?.checked);
+        layerManager.setVisible('vehicles', cbVehicles?.checked);
+        layerManager.setVisible('pois', cbPOIs?.checked);
+        debugLog(`Layer visibility - Peds: ${cbPeds?.checked}, Vehicles: ${cbVehicles?.checked}, POIs: ${cbPOIs?.checked}`);
+      };
+
+      cbPeds?.addEventListener('change', applyLayerVisibility);
+      cbVehicles?.addEventListener('change', applyLayerVisibility);
+      cbPOIs?.addEventListener('change', applyLayerVisibility);
+
+      applyLayerVisibility();
+      debugLog('Map loaded with MapTiler basemap and Mapbox tileset layers');
+    });
+
+    // Basemap switcher using MapTiler styles (same as your original)
+    const BASEMAPS = [
+      { 
+        id: "satellite", 
+        label: "satellite", 
+        style: `https://api.maptiler.com/maps/satellite/style.json?key=${MAPTILER_KEY}`, 
+        thumb: "./assets/02_Earth.png" 
+      },
+      { 
+        id: "hybrid", 
+        label: "hybrid", 
+        style: `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`, 
+        thumb: "./assets/01_Hybrid.png" 
+      },
+      { 
+        id: "pastel", 
+        label: "pastel", 
+        style: `https://api.maptiler.com/maps/0199c990-d557-79f4-a316-082733fdc6a6/style.json?key=${MAPTILER_KEY}`, 
+        thumb: "./assets/03_Pastel.png" 
+      }
+    ];
+
+    const bmPanel = document.createElement('div');
+    bmPanel.id = "bmPanel";
+    bmPanel.className = "flex md:flex-col gap-2 md:hover:flex md:hover:scale-100 transition origin-bottom-right md:group-hover:scale-100 md:scale-100";
+
+    const bmCtrl = document.createElement('div');
+    bmCtrl.id = "basemapCtrl";
+    bmCtrl.className = "absolute bottom-10 right-4 z10";
+    bmCtrl.innerHTML = `
+      <div class="group relative">
+        <button id="bmToggle"
+          class="md:hidden mb-2 grid h-10 w-10 place-items-center rounded-md bg-white/90 shadow border border-neutral-200">
+          <span class="text-xs">BM</span>
+        </button>
+      </div>
+    `;
+    bmCtrl.querySelector('.group').appendChild(bmPanel);
+    document.body.appendChild(bmCtrl);
+
+    const bmToggle = document.getElementById("bmToggle");
+    let open = false;
+    bmToggle?.addEventListener("click", () => {
+      open = !open;
+      bmPanel.classList.toggle("hidden", !open);
+    });
+    const isMobile = () => matchMedia("(max-width: 767px)").matches;
+    const setInitialVisibility = () => bmPanel.classList.toggle("hidden", isMobile());
+    setInitialVisibility();
+    addEventListener("resize", setInitialVisibility);
+
+    let activeId = "pastel";
+    BASEMAPS.forEach(({ id, label, thumb, style }) => {
+      const btn = document.createElement("button");
+      btn.className = [
+        "relative overflow-hidden rounded-md border border-neutral-300 bg-white shadow",
+        "hover:shadow-md focus:outline-none focus:ring focus:ring-blue-400/30",
+        "w-16 h-16 md:w-20 md:h-20"
+      ].join(" ");
+      btn.setAttribute("data-style", style);
+      btn.setAttribute("data-id", id);
+      btn.title = label;
+      btn.innerHTML = `
+        <img src="${thumb}" alt="${label}" class="absolute inset-0 w-full h-full object-cover">
+        <span class="absolute bottom-0 left-0 right-0 text-[10px] md:text-xs bg-black/60 text-white px-1 py-0.5">${label}</span>
+      `;
+      if (id === activeId) btn.classList.add("ring", "ring-blue-500");
+
+      btn.addEventListener("click", () => {
+        if (id === activeId) return;
+        
+        // Store current camera position and layer visibility
+        const center = map.getCenter();
+        const zoom = map.getZoom();
+        const bearing = map.getBearing();
+        const pitch = map.getPitch();
+        
+        const visibilityStates = {};
+        Object.keys(layerManager.layers).forEach(key => {
+          visibilityStates[key] = layerManager.visibility[key];
+        });
+        
+        // Change the map style (MapTiler basemap)
+        map.setStyle(style);
+        
+        // Re-add layers after style loads and restore visibility
+        map.once('styledata', () => {
+          // Restore camera position
+          map.jumpTo({ center, zoom, bearing, pitch });
+          
+          // Rebuild layers with previous visibility states
+          Object.keys(layerManager.layers).forEach(key => {
+            layerManager._add(key);
+            layerManager.setVisible(key, visibilityStates[key]);
+          });
+        });
+        
+        // Update UI
+        bmPanel.querySelectorAll("button").forEach(b => b.classList.remove("ring", "ring-blue-500"));
+        btn.classList.add("ring", "ring-blue-500");
+        activeId = id;
+        if (isMobile()) { 
+          open = false; 
+          bmPanel.classList.add("hidden"); 
+        }
+        
+        debugLog(`Switched to ${label} basemap`);
+      });
+
+      bmPanel.appendChild(btn);
+    });
+  </script>
+
+  <!-- Landing overlay -->
+  <div id="landing" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md">
+    <div class="w-[min(92vw,560px)] rounded-2xl bg-white/80 border border-white/60 shadow-xl p-6">
+      <div class="flex items-center gap-4 mb-4">
+        <img src="./assets/MIT.svg" alt="MIT" class="h-8 w-auto scale-[0.8]" />
+        <div class="brand-text flex items-center gap-3">
+          <img src="./assets/SA+P.svg" alt="SA+P" class="h-8 w-auto ml-[-30px] scale-[0.6]" />
+          <img src="./assets/SBX.svg" alt="SBX" class="h-8 w-auto ml-[80px] scale-[1.3]" />
+        </div>
+      </div>
+      <p class="text-sm text-neutral-700 mb-4">A brief intro or disclaimer goes here.</p>
+      <div class="flex items-center gap-2">
+        <button id="enterBtn" class="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 font-medium hover:bg-black/90">Enter</button>
+        <button id="skipOnceBtn" class="inline-flex items-center justify-center rounded-lg bg-white/70 border border-neutral-300 px-4 py-2 font-medium hover:bg-white">Skip for this session</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const landing = document.getElementById('landing');
+    const enterBtn = document.getElementById('enterBtn');
+    const skipOnceBtn = document.getElementById('skipOnceBtn');
+    if (sessionStorage.getItem('skip-landing') === '1') landing.classList.add('hidden');
+    function closeLanding(){ landing.classList.add('hidden'); }
+    enterBtn.addEventListener('click', closeLanding);
+    skipOnceBtn.addEventListener('click', () => { sessionStorage.setItem('skip-landing', '1'); closeLanding(); });
+  </script>
+</body>
+</html>
