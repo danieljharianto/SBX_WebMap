@@ -563,11 +563,11 @@
         const nightUser = parseFloat(props.Night) || 0;
         
         // Round to 2 decimal places
-        const apUserRounded = apUser.toFixed(2);
+        const apUserRounded = apUser.toFixed(0);
         const lengthRounded = length.toFixed(2);
-        const morningRounded = morningUser.toFixed(2);
-        const dayRounded = dayUser.toFixed(2);
-        const nightRounded = nightUser.toFixed(2);
+        const morningRounded = morningUser.toFixed(0);
+        const dayRounded = dayUser.toFixed(0);
+        const nightRounded = nightUser.toFixed(0);
         
         // Determine class based on Jenks breaks
         let densityClass = '';
