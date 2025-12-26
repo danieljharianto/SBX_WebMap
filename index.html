@@ -654,7 +654,7 @@
       map.on('click', 'vehicles-layer', (e) => {
         const props = e.features[0].properties;
         const density = parseFloat(props['11:00:00']) || 0;
-        const length = parseFloat(props.__Length) || 0;
+        const length = parseFloat(props.Shape_Leng) || 0;
         
         // Round to 2 decimal places
         const densityRounded = density.toFixed(2);
@@ -918,7 +918,7 @@
         <div class="flex items-center gap-4">
           <img src="./assets/MIT.svg" alt="MIT" class="h-8 w-auto scale-[0.8]" />
           <div class="flex items-center gap-3">
-            <img src="./assets/SA+P.svg" alt="SA+P" class="h-8 w-auto ml-[-30px] scale-[0.6]" />
+            <img src="./assets/SA+P.svg" alt="SA+P" class="h-8 w-auto ml-[-20px] scale-[0.7]" />
             <img src="./assets/SBX.svg" alt="SBX" class="h-8 w-auto ml-[200px] scale-[1.3]" />
           </div>
         </div>
