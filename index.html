@@ -6,11 +6,26 @@
   <title>South Bronx Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* Map - Static, always full screen, behind sidebar */
+    #map {
+      position: fixed !important;
+      top: 73px !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: calc(100vh - 73px) !important;
+      z-index: 0 !important;
+    }
+    
     .sidebar{
+      position: fixed;
+      top: 73px;
+      left: 0;
+      bottom: 0;
       width: 350px;
       transition: width .22s ease, transform .22s ease;
-      flex-shrink: 0;
-      flex-grow: 0;
+      z-index: 10;
     }
     .sidebar.collapsed{
       width: 96px;
@@ -63,6 +78,7 @@
       .backdrop.show{display:block}
     }
     .debug-panel{
+      display: none !important;
       position:fixed;left:8px;bottom:8px;z-index:9999;
       max-width:320px;max-height:40vh;overflow:auto;
       background:#fff;border:1px solid #ddd;border-radius:8px;
@@ -98,10 +114,10 @@
   </style>
 </head>
 
-<body class="h-screen w-screen overflow-hidden bg-neutral-50 grid grid-rows-[auto_1fr]">
+<body class="h-screen w-screen overflow-hidden bg-neutral-50">
   
   <!-- Header stretched across the top -->
-  <header class="flex items-center justify-between gap-3 p-4 border-b-2 border-black bg-white z-10">
+  <header class="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 p-4 border-b-2 border-black bg-white z-20">
     <div class="flex items-center gap-3">
       <div id="brandLogo" class="shrink-0 grid place-items-center h-10 w-10 rounded-lg bg-white text-white font-bold cursor-pointer" title="Collapse/Expand">
         <img src="./assets/MIT.svg" class="scale-[1.2]" >
@@ -112,13 +128,16 @@
       </div>
     </div>
     <div class="flex items-center">
-      <img src="./assets/People_S.png" class="h-8 mr-[180px] scale-[2.1]"/>
+      <img src="./assets/People_S.png" class="h-8 mr-[200px] scale-[1.80]"/>
     </div>
   </header>
 
   <!-- Main content area: sidebar + map -->
-  <div class="flex h-full w-full overflow-hidden relative">
-    <!-- Sidebar -->
+  <div class="relative h-full w-full overflow-hidden">
+    <!-- Map - Fixed position, always full screen, behind sidebar -->
+    <div id="map"></div>
+    
+    <!-- Sidebar - Fixed position, overlays map -->
     <aside id="sidebar" class="sidebar bg-white border-r border-neutral-200 shadow-sm flex">
       <!-- Expand/collapse bar - extends to bottom -->
       <div class="expand-bar" title="Click to expand/collapse sidebar"></div>
@@ -169,7 +188,7 @@
                 Use the layer controls below to visualize different data types on the map.
               </p>
               
-              <h3 class="text-xs font-semibold mb-2">Available Layers</h3>
+              <h3 class="text-xs font-semibold mb-2">Layers</h3>
               <ul class="space-y-2">
                 <li class="flex items-center gap-2">
                   <input id="cbPeds" type="checkbox" class="h-4 w-4">
@@ -229,9 +248,6 @@
           </div>
         </section>
     </aside>
-
-    <!-- Map -->
-    <div id="map" class="flex-1 h-full relative"></div>
   </div>
 
   <script>
@@ -694,7 +710,7 @@
             <div style="padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-width: 200px;">
               <strong style="font-size: 13px; color: #1a1a1a; display: block; margin-bottom: 12px;">Vehicle Density</strong>
               <div style="margin: 0 0 12px 0; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 3px solid ${classColor};">
-                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">Density Value (11:00)</div>
+                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">Average Density Value</div>
                 <strong style="font-size: 16px; color: #212529;">${densityRounded}</strong>
               </div>
               <div style="margin: 0 0 8px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">
@@ -796,9 +812,9 @@
         thumb: "./assets/02_Earth.png" 
       },
       { 
-        id: "hybrid", 
-        label: "hybrid", 
-        style: `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`, 
+        id: "OSM", 
+        label: "street map", 
+        style: `https://api.maptiler.com/maps/openstreetmap/style.json?key=${MAPTILER_KEY}`, 
         thumb: "./assets/01_Hybrid.png" 
       },
       { 
