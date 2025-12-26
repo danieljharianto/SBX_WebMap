@@ -120,11 +120,13 @@
   <header class="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 p-4 border-b-2 border-black bg-white z-20">
     <div class="flex items-center gap-3">
       <div id="brandLogo" class="shrink-0 grid place-items-center h-10 w-10 rounded-lg bg-white text-white font-bold cursor-pointer" title="Collapse/Expand">
-        <img src="./assets/MIT.svg" class="scale-[1.2]" >
+        <img src="./assets/MIT.svg" class="mr-[-40px] scale-[1.3] " >
       </div>
-      <div class="brand-text flex items-center gap-3">
-        <img src="./assets/SA+P.svg" class="h-8 scale-[0.75]"/>
-        <img src="./assets/SBX.svg" class="h-8 ml-[70px] scale-[1.3]"/>
+    <!-- <div class="brand-text flex items-center gap-2">
+        <img src="./assets/SA+P.svg" class="h-8 ml-[30px] scale-[0.8] "/>
+      </div> -->
+    <div class="brand-text flex items-center gap-3">
+        <img src="./assets/SBX.svg" class="h-8 ml-[55px] scale-[1.3] "/>
       </div>
     </div>
     <div class="flex items-center">
@@ -143,9 +145,9 @@
       <div class="expand-bar" title="Click to expand/collapse sidebar"></div>
       
       <nav class="rail-justify flex flex-col items-center gap-2 p-3 border-r border-neutral-200" role="tablist" aria-orientation="vertical">
-        <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" aria-selected="true" data-tab="background" role="tab" aria-controls="background" title="Background">B</button>
-        <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" data-tab="traffic" role="tab" aria-controls="traffic" title="Traffic Data">T</button>
-        <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" data-tab="intervention" role="tab" aria-controls="intervention" title="Intervention">I</button>
+        <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" aria-selected="true" data-tab="background" role="tab" aria-controls="background" title="Background"> <img src="./assets/home.svg" alt="Background" class="w-8 h-8 ml-[3.5px]"></button>
+        <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" data-tab="traffic" role="tab" aria-controls="traffic" title="Traffic Data"><img src="./assets/map.svg" alt="Background" class="w-8 h-8 ml-[3.5px]"></button>
+        <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" data-tab="intervention" role="tab" aria-controls="intervention" title="Intervention"><img src="./assets/pencil.svg" alt="Background" class="w-8 h-8 ml-[3.5px]"></button>
       </nav>
 
       <section class="panel flex-1 overflow-y-auto p-4">
@@ -154,27 +156,23 @@
             <div>
               <h2 class="text-sm font-bold mb-2">Background</h2>
               <p class="text-justify leading-relaxed">
-                The South Bronx is characterized by high population density, heavy reliance on walking and public transit,
-                and a complex coexistence of residential neighborhoods, industrial zones, and major transportation infrastructure.
-                Despite carrying significant pedestrian demand, many streets in the area remain unsafe, uncomfortable, or
-                disconnected due to fast-moving traffic, limited pedestrian amenities, industrial land uses, and infrastructural
-                barriers such as highways and toll roads. These conditions disproportionately affect communities that depend on
-                walking as part of their daily mobility, while also limiting access to waterfronts, services, and public space.
-                Understanding pedestrian behavior and movement patterns is therefore essential to revealing spatial inequalities
-                and identifying opportunities for more inclusive and responsive urban design.
+                The South Bronx is shaped by high population density, strong reliance on walking and public transit,
+                and the close coexistence of residential, industrial, and transportation infrastructure. Despite high
+                pedestrian demand, many streets remain unsafe or uncomfortable due to fast-moving traffic, limited
+                pedestrian amenities, and infrastructural barriers such as highways and toll roads. These conditions
+                restrict access to services, waterfronts, and public space, making pedestrian analysis essential to
+                identifying spatial inequities and design opportunities.
               </p>
             </div>
             
             <div>
               <h2 class="text-sm font-bold mb-2">Objectives</h2>
               <p class="text-justify leading-relaxed">
-                This studio analyzes pedestrian movement, traffic conditions, and land-use patterns in the South Bronx to inform
-                strategic urban design interventions. By combining pedestrian density analysis, transit accessibility, and spatial
-                connectivity, the studio identifies priority corridors and underutilized areas with potential for activation. The
-                studio develops design strategies that improve walkability, safety, and environmental quality while strengthening
-                connections between residential areas, transit nodes, commercial activity, and the waterfront. Ultimately, this
-                work uses pedestrian-centered analysis to guide focused, data-informed design decisions that respond to everyday
-                mobility needs and long-term urban transformation.
+                  This studio project analyzes pedestrian movement, traffic, and land use in the South Bronx to inform targeted
+                  urban design strategies. By integrating pedestrian density, transit accessibility, and network
+                  connectivity, the studio identifies priority corridors and underutilized areas for activation. The
+                  goal is to improve walkability, safety, and environmental quality while strengthening connections
+                  between neighborhoods, transit, commercial areas, and the waterfront.
               </p>
             </div>
           </div>
@@ -619,7 +617,7 @@
             <div style="padding: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-width: 200px;">
               <strong style="font-size: 12px; color: #1a1a1a; display: block; margin-bottom: 10px;">Pedestrian Usage</strong>
               <div style="margin: 0 0 10px 0; padding: 10px; background: #f8f8f8; border-radius: 5px;">
-                <div style="font-size: 10px; color: #666; margin-bottom: 4px;">Average User/Day</div>
+                <div style="font-size: 10px; color: #666; margin-bottom: 4px;">Average User / Day</div>
                 <strong style="font-size: 16px; color: ${classColor}; line-height: 1.2;">${apUserRounded}</strong>
               </div>
               <div style="margin: 0 0 10px 0; padding: 8px; background: white; border-radius: 5px; border: 1px solid #e8e8e8;">
