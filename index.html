@@ -6,12 +6,56 @@
   <title>South Bronx Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
-    .sidebar{width:350px;transition:width .22s ease, transform .22s ease;}
-    .sidebar.collapsed{width:72px;}
+    .sidebar{
+      width: 350px;
+      transition: width .22s ease, transform .22s ease;
+      flex-shrink: 0;
+      flex-grow: 0;
+    }
+    .sidebar.collapsed{
+      width: 96px;
+    }
     .sidebar .panel{display:block}
     .sidebar.collapsed .panel{display:none}
     .sidebar .rail-justify{justify-content:flex-start}
     .sidebar.collapsed .brand-text{display:none}
+    
+    /* Expand bar - extends from top to bottom on left */
+    .expand-bar{
+      width: 24px;
+      background-color: #e5e7eb;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      flex-shrink: 0;
+      height: 100%;
+    }
+    .expand-bar:hover{
+      background-color: #9ca3af;
+    }
+    
+    /* Ensure rail buttons have white background with proper width */
+    .rail-justify{
+      background-color: white;
+      min-width: 72px;
+      flex-shrink: 0;
+    }
+    
+    /* Clean popup styling - no black outlines */
+    .mapboxgl-popup-content{
+      padding: 0 !important;
+      border-radius: 12px !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15) !important;
+      border: none !important;
+    }
+    .mapboxgl-popup-close-button{
+      font-size: 20px !important;
+      padding: 8px !important;
+      color: #666 !important;
+    }
+    .mapboxgl-popup-tip{
+      border: none !important;
+    }
+    
     @media (max-width: 767px){
       .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%)}
       .sidebar.open{transform:translateX(0)}
@@ -26,64 +70,164 @@
       padding:8px;font:12px system-ui, -apple-system, Segoe UI, Roboto, sans-serif
     }
     .debug-panel h4{margin:0 0 6px 0;font-size:12px}
+    
+    /* Disclaimer styling */
+    .disclaimer__content{
+      max-height: 470px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    .disclaimer__item{
+      margin-bottom: 16px;
+    }
+    .disclaimer__item:last-child{
+      margin-bottom: 0;
+    }
+    .disclaimer__item h3{
+      font-size: 14px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0 0 6px 0;
+    }
+    .disclaimer__item p{
+      font-size: 13px;
+      line-height: 1.6;
+      color: #4b5563;
+      margin: 0;
+    }
   </style>
 </head>
 
 <body class="h-screen w-screen overflow-hidden bg-neutral-50 grid grid-rows-[auto_1fr]">
   
   <!-- Header stretched across the top -->
-  <header class="flex items-center gap-3 p-4 border-b-2 border-black bg-white z-10">
-    <div id="brandLogo" class="shrink-0 grid place-items-center h-10 w-10 rounded-lg bg-white text-white font-bold cursor-pointer" title="Collapse/Expand">
-      <img src="./assets/MIT.svg" class="scale-[1.2]" >
+  <header class="flex items-center justify-between gap-3 p-4 border-b-2 border-black bg-white z-10">
+    <div class="flex items-center gap-3">
+      <div id="brandLogo" class="shrink-0 grid place-items-center h-10 w-10 rounded-lg bg-white text-white font-bold cursor-pointer" title="Collapse/Expand">
+        <img src="./assets/MIT.svg" class="scale-[1.2]" >
+      </div>
+      <div class="brand-text flex items-center gap-3">
+        <img src="./assets/SA+P.svg" class="h-8 scale-[0.75]"/>
+        <img src="./assets/SBX.svg" class="h-8 ml-[70px] scale-[1.3]"/>
+      </div>
     </div>
-    <div class="brand-text flex items-center gap-3">
-      <img src="./assets/SA+P.svg" class="h-8 scale-[0.75]"/>
-      <img src="./assets/SBX.svg" class="h-8 ml-[70px] scale-[1.3]"/>
+    <div class="flex items-center">
+      <img src="./assets/People_S.png" class="h-8 mr-[180px] scale-[2.1]"/>
     </div>
   </header>
 
   <!-- Main content area: sidebar + map -->
-  <div class="flex h-full w-full overflow-hidden">
+  <div class="flex h-full w-full overflow-hidden relative">
     <!-- Sidebar -->
-    <aside id="sidebar" class="sidebar bg-white border-r border-neutral-200 grid grid-rows-[auto_1fr] shadow-sm w-[450px] max-w-[450px] flex-none">
+    <aside id="sidebar" class="sidebar bg-white border-r border-neutral-200 shadow-sm flex">
+      <!-- Expand/collapse bar - extends to bottom -->
+      <div class="expand-bar" title="Click to expand/collapse sidebar"></div>
       
-      <div class="flex h-full">
-        <nav class="rail-justify flex flex-col items-center gap-2 p-3 border-r border-neutral-200" role="tablist" aria-orientation="vertical">
-          <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" aria-selected="true" data-tab="background" role="tab" aria-controls="background" title="background">B</button>
-          <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold  aria-selected:bg-[#c0c0c0] aria-selected:text-white"  data-tab="layers" role="tab" aria-controls="layers" title="Walkability">W</button>
-          <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold  aria-selected:bg-[#c0c0c0] aria-selected:text-white"  data-tab="layers" role="tab" aria-controls="layers" title="Energy">E</button>
-          <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold  aria-selected:bg-[#c0c0c0] aria-selected:text-white"  data-tab="layers" role="tab" aria-controls="layers" title="Layers">L</button>
-        </nav>
+      <nav class="rail-justify flex flex-col items-center gap-2 p-3 border-r border-neutral-200" role="tablist" aria-orientation="vertical">
+        <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" aria-selected="true" data-tab="background" role="tab" aria-controls="background" title="Background">B</button>
+        <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" data-tab="traffic" role="tab" aria-controls="traffic" title="Traffic Data">T</button>
+        <button class="rail-btn h-10 w-10 rounded-lg border border-neutral-300 bg-white text-sm font-bold aria-selected:bg-[#c0c0c0] aria-selected:text-white" data-tab="intervention" role="tab" aria-controls="intervention" title="Intervention">I</button>
+      </nav>
 
-        <section class="panel flex-1 overflow-y-auto p-4">
-          <div id="background" class="tab-content space-y-2 text-sm" role="tabpanel">
-            <ul class="list-disc pl-5 space-y-2">
-              <h1><strong>Background</strong></h1>
-              <li>The South Bronx is home to a storied history of changemakers and activism...</li>
-              <h1><strong>Objectives</strong></h1>
-              <li>This joint studio-practicum aims to answer a series of questions...</li>
-            </ul>
+      <section class="panel flex-1 overflow-y-auto p-4">
+          <!-- Background Tab -->
+          <div id="background" class="tab-content space-y-4 text-xs" role="tabpanel">
+            <div>
+              <h2 class="text-sm font-bold mb-2">Background</h2>
+              <p class="text-justify leading-relaxed">
+                The South Bronx is characterized by high population density, heavy reliance on walking and public transit,
+                and a complex coexistence of residential neighborhoods, industrial zones, and major transportation infrastructure.
+                Despite carrying significant pedestrian demand, many streets in the area remain unsafe, uncomfortable, or
+                disconnected due to fast-moving traffic, limited pedestrian amenities, industrial land uses, and infrastructural
+                barriers such as highways and toll roads. These conditions disproportionately affect communities that depend on
+                walking as part of their daily mobility, while also limiting access to waterfronts, services, and public space.
+                Understanding pedestrian behavior and movement patterns is therefore essential to revealing spatial inequalities
+                and identifying opportunities for more inclusive and responsive urban design.
+              </p>
+            </div>
+            
+            <div>
+              <h2 class="text-sm font-bold mb-2">Objectives</h2>
+              <p class="text-justify leading-relaxed">
+                This studio analyzes pedestrian movement, traffic conditions, and land-use patterns in the South Bronx to inform
+                strategic urban design interventions. By combining pedestrian density analysis, transit accessibility, and spatial
+                connectivity, the studio identifies priority corridors and underutilized areas with potential for activation. The
+                studio develops design strategies that improve walkability, safety, and environmental quality while strengthening
+                connections between residential areas, transit nodes, commercial activity, and the waterfront. Ultimately, this
+                work uses pedestrian-centered analysis to guide focused, data-informed design decisions that respond to everyday
+                mobility needs and long-term urban transformation.
+              </p>
+            </div>
           </div>
 
-          <div id="layers" class="tab-content hidden space-y-2 text-sm" role="tabpanel">
-            <p><strong>Layers</strong> controls.</p>
-            <ul class="space-y-2">
-              <li class="flex items-center gap-2">
-                <input id="cbPeds" type="checkbox" class="h-4 w-4">
-                <span>Pedestrian Density</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <input id="cbVehicles" type="checkbox" class="h-4 w-4">
-                <span>Vehicle Density</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <input id="cbPOIs" type="checkbox" class="h-4 w-4">
-                <span>POIs</span>
-              </li>
-            </ul>
+          <!-- Traffic Data Tab -->
+          <div id="traffic" class="tab-content hidden space-y-4 text-xs" role="tabpanel">
+            <div>
+              <h2 class="text-sm font-bold mb-3">Traffic Data</h2>
+              <p class="text-justify leading-relaxed mb-4">
+                This section provides access to traffic and pedestrian density data for the South Bronx area.
+                Use the layer controls below to visualize different data types on the map.
+              </p>
+              
+              <h3 class="text-xs font-semibold mb-2">Available Layers</h3>
+              <ul class="space-y-2">
+                <li class="flex items-center gap-2">
+                  <input id="cbPeds" type="checkbox" class="h-4 w-4">
+                  <span>Pedestrian Density</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <input id="cbVehicles" type="checkbox" class="h-4 w-4">
+                  <span>Vehicle Density</span>
+                </li>
+                <li class="flex items-center gap-2">
+                  <input id="cbPLOS" type="checkbox" class="h-4 w-4">
+                  <span>Pedestrian Level of Service</span>
+                </li>
+              </ul>
+              
+              <div class="mt-4 p-3 bg-gray-50 rounded border border-gray-200">
+                <p class="text-xs text-gray-600">
+                  <strong>Note:</strong> Check the boxes above to toggle data layers on the map. 
+                  Pedestrian density is shown with a color gradient from yellow (low) to dark brown (high density).
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Intervention Tab -->
+          <div id="intervention" class="tab-content hidden space-y-4 text-xs" role="tabpanel">
+            <div>
+              <h2 class="text-sm font-bold mb-3">Intervention Strategies</h2>
+              <p class="text-justify leading-relaxed mb-4">
+                Based on pedestrian movement patterns and traffic data analysis, this section outlines 
+                potential intervention strategies for improving walkability and safety in the South Bronx.
+              </p>
+              
+              <h3 class="text-xs font-semibold mb-2">Priority Areas</h3>
+              <ul class="list-disc pl-5 space-y-2 text-justify">
+                <li>High-density pedestrian corridors requiring improved sidewalk infrastructure</li>
+                <li>Intersections with elevated safety concerns</li>
+                <li>Transit nodes with connectivity gaps</li>
+                <li>Underutilized waterfront areas with activation potential</li>
+              </ul>
+              
+              <h3 class="text-xs font-semibold mb-2 mt-4">Design Strategies</h3>
+              <ul class="list-disc pl-5 space-y-2 text-justify">
+                <li>Pedestrian-priority street redesigns</li>
+                <li>Traffic calming measures in residential areas</li>
+                <li>Enhanced crossings and wayfinding systems</li>
+                <li>Green infrastructure and public space integration</li>
+              </ul>
+              
+              <div class="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
+                <p class="text-xs text-blue-800">
+                  <strong>Coming Soon:</strong> Interactive intervention mapping and design visualization tools 
+                  will be added to this section.
+                </p>
+              </div>
+            </div>
           </div>
         </section>
-      </div>
     </aside>
 
     <!-- Map -->
@@ -93,28 +237,37 @@
   <script>
     const sidebar = document.getElementById('sidebar');
     const brandLogo = document.getElementById('brandLogo');
+    const expandBar = document.querySelector('.expand-bar');
     const saved = localStorage.getItem('sidebar-collapsed');
     if (saved === 'true') sidebar.classList.add('collapsed');
-    brandLogo.addEventListener('click', () => {
+    
+    // Function to toggle sidebar
+    const toggleSidebar = () => {
       sidebar.classList.toggle('collapsed');
       localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
-    });
+    };
+    
+    // Click logo to toggle
+    brandLogo.addEventListener('click', toggleSidebar);
+    
+    // Click thin expand bar to toggle
+    expandBar.addEventListener('click', toggleSidebar);
 
     const railBtns = Array.from(document.querySelectorAll('.rail-btn'));
-    const tabs = Array.from(document.querySelectorAll('.tab'));
     const panels = Array.from(document.querySelectorAll('.tab-content'));
+    
     function activateTab(id){
+      // Auto-expand sidebar if collapsed when clicking a button
+      if (sidebar.classList.contains('collapsed')) {
+        sidebar.classList.remove('collapsed');
+        localStorage.setItem('sidebar-collapsed', 'false');
+      }
+      
       railBtns.forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
-      tabs.forEach(t => {
-        const active = t.dataset.tab === id;
-        t.classList.toggle('bg-black', active);
-        t.classList.toggle('text-white', active);
-        t.classList.toggle('bg-neutral-200', !active);
-      });
       panels.forEach(p => p.classList.toggle('hidden', p.id !== id));
     }
+    
     railBtns.forEach(b => b.addEventListener('click', () => activateTab(b.dataset.tab)));
-    tabs.forEach(t => t.addEventListener('click', () => activateTab(t.dataset.tab)));
     activateTab('background');
   </script>
 
@@ -231,32 +384,29 @@
 
     const layerManager = new HybridLayerManager(map);
 
-    // Define your Mapbox tileset layers - replace with your actual tileset IDs
+    // Define your Mapbox tileset layers with correct color gradients
     const PEDS_LAYER = {
       key: 'peds',
-      tilesetId: 'danielharianto.as75q55k', 
+      tilesetId: 'danielharianto.0s9uqe8g',
       layerId: 'peds-layer',
-      sourceLayer: 'Peds_Analysis-1oesar', 
+      sourceLayer: 'pedestrian_density-bed9gf',
       type: 'line',
       paint: {
         'line-color': [
-          'interpolate',
-          ['linear'],
-          ['get', 'Res_Rational'],
-          // [value, color] pairs - these create your gradient stops
-          0, '#ffffd4',      // Light yellow for low values
-          10, '#fff8c7',     // Very light yellow
-          20, '#fff1ba',     // Light cream
-          50, '#fedf99',     // Light orange
-          70, '#fed080',     // Orange
-          100, '#febb5e',    // Medium orange
-          150, '#fe9829',    // Dark orange
-          210, '#f68d23',    // Orange-red
-          350, '#e97719',    // Red-orange
-          500, '#d59929',    // Brown-orange
-          1200, '#b24508',   // Dark brown
-          5000, '#9d3605',   // Very dark brown
-          5001, '#7c2d04'    // Darkest brown
+          'step',
+          ['get', 'Btw_Rational'],
+          '#FFE5D9',  // 0 - 3.5: Very light peach
+          3.470, '#FFCCB3',  // 3.5 - 9.9: Light peach
+          9.920, '#FFB399',  // 9.9 - 16.4: Light orange
+          16.430, '#FF9980',  // 16.4 - 23.7: Medium light orange
+          23.720, '#FF8066',  // 23.7 - 31.1: Medium orange
+          31.130, '#FF664D',  // 31.1 - 39.2: Orange
+          39.180, '#FF4D33',  // 39.2 - 47: Orange-red
+          47.010, '#FF331A',  // 47 - 54.8: Red-orange
+          54.760, '#E62E00',  // 54.8 - 64: Red
+          64.030, '#CC2900',  // 64 - 74.3: Dark red
+          74.250, '#B32400',  // 74.3 - 84.6: Darker red
+          84.600, '#991F00'   // 84.6+: Very dark red
         ],
         'line-width': 10,
         'line-opacity': 0.9
@@ -269,14 +419,29 @@
 
     const VEHICLES_LAYER = {
       key: 'vehicles',
-      tilesetId: 'your-username.your-vehicles-tileset-id', // Replace with your tileset ID
+      tilesetId: 'danielharianto.0iqfake1',
       layerId: 'vehicles-layer',
-      sourceLayer: 'your-source-layer-name', // The source layer name in your tileset
+      sourceLayer: 'turck_density_upd-di2urp',
       type: 'line',
       paint: {
-        'line-color': '#1d4ed8',
-        'line-width': 2,
-        'line-opacity': 1
+        'line-color': [
+          'step',
+          ['get', '11:00:00'],
+          '#FFE5D9',  // 0 - 3.5: Very light peach
+          3.470, '#FFCCB3',  // 3.5 - 9.9: Light peach
+          9.920, '#FFB399',  // 9.9 - 16.4: Light orange
+          16.430, '#FF9980',  // 16.4 - 23.7: Medium light orange
+          23.720, '#FF8066',  // 23.7 - 31.1: Medium orange
+          31.130, '#FF664D',  // 31.1 - 39.2: Orange
+          39.180, '#FF4D33',  // 39.2 - 47: Orange-red
+          47.010, '#FF331A',  // 47 - 54.8: Red-orange
+          54.760, '#E62E00',  // 54.8 - 64: Red
+          64.030, '#CC2900',  // 64 - 74.3: Dark red
+          74.250, '#B32400',  // 74.3 - 84.6: Darker red
+          84.600, '#991F00'   // 84.6+: Very dark red
+        ],
+        'line-width': 10,
+        'line-opacity': 0.9
       },
       layout: {
         'line-join': 'round',
@@ -284,47 +449,345 @@
       }
     };
 
-    const POIS_LAYER = {
-      key: 'pois',
-      tilesetId: 'your-username.your-pois-tileset-id', // Replace with your tileset ID
-      layerId: 'pois-layer',
-      sourceLayer: 'your-source-layer-name', // The source layer name in your tileset
-      type: 'circle',
+    const PLOS_LAYER = {
+      key: 'plos',
+      tilesetId: 'danielharianto.dq3dkrke',
+      layerId: 'plos-layer',
+      sourceLayer: 'pedestrian_plos-cdosep',
+      type: 'line',
       paint: {
-        'circle-radius': 5,
-        'circle-color': '#22c55e',
-        'circle-opacity': 0.8
+        'line-color': [
+          'step',
+          ['get', 'PLOS_Edit'],
+          '#52C41A',  // 0.0-1.5: Bright Green
+          1.5, '#73D13D',  // 1.5-2.5: Light Green
+          2.5, '#95DE64',  // 2.5-3.5: Pale Green
+          3.5, '#8C8C8C',  // 3.5-4.5: Medium Gray
+          4.5, '#722ED1',  // 4.5-5.5: Deep Purple
+          5.5, '#9254DE',  // 5.5-6.5: Purple
+          6.5, '#B37FEB',  // 6.5-10.0: Light Purple/Pink
+          10.0, '#EB2F96'  // 10.0-40.0: Bright Pink
+        ],
+        'line-width': 10,
+        'line-opacity': 0.9
+      },
+      layout: {
+        'line-join': 'round',
+        'line-cap': 'round'
       }
     };
 
     map.on('load', () => {
-      // Add your Mapbox tileset layers
+      // Add all layers in order: Peds, Vehicles, PLOS
       layerManager.addTilesetLayer(PEDS_LAYER);
-      // Uncomment when you have the data:
-      // layerManager.addTilesetLayer(VEHICLES_LAYER);
-      // layerManager.addTilesetLayer(POIS_LAYER);
+      layerManager.addTilesetLayer(VEHICLES_LAYER);
+      layerManager.addTilesetLayer(PLOS_LAYER);
 
       // Wire checkboxes to layer visibility
       const cbPeds = document.getElementById('cbPeds');
       const cbVehicles = document.getElementById('cbVehicles');
-      const cbPOIs = document.getElementById('cbPOIs');
+      const cbPLOS = document.getElementById('cbPLOS');
 
       const applyLayerVisibility = () => {
         layerManager.setVisible('peds', cbPeds?.checked);
         layerManager.setVisible('vehicles', cbVehicles?.checked);
-        layerManager.setVisible('pois', cbPOIs?.checked);
-        debugLog(`Layer visibility - Peds: ${cbPeds?.checked}, Vehicles: ${cbVehicles?.checked}, POIs: ${cbPOIs?.checked}`);
+        layerManager.setVisible('plos', cbPLOS?.checked);
+        debugLog(`Layer visibility - Peds: ${cbPeds?.checked}, Vehicles: ${cbVehicles?.checked}, PLOS: ${cbPLOS?.checked}`);
       };
 
-      cbPeds?.addEventListener('change', applyLayerVisibility);
-      cbVehicles?.addEventListener('change', applyLayerVisibility);
-      cbPOIs?.addEventListener('change', applyLayerVisibility);
+      // Make checkboxes exclusive - only one can be checked at a time
+      cbPeds?.addEventListener('change', () => {
+        if (cbPeds.checked) {
+          cbVehicles.checked = false;
+          cbPLOS.checked = false;
+        }
+        applyLayerVisibility();
+      });
+      
+      cbVehicles?.addEventListener('change', () => {
+        if (cbVehicles.checked) {
+          cbPeds.checked = false;
+          cbPLOS.checked = false;
+        }
+        applyLayerVisibility();
+      });
+      
+      cbPLOS?.addEventListener('change', () => {
+        if (cbPLOS.checked) {
+          cbPeds.checked = false;
+          cbVehicles.checked = false;
+        }
+        applyLayerVisibility();
+      });
 
       applyLayerVisibility();
+      
+      // Add popup handlers for all layers
+      setupPopupHandlers();
+      
       debugLog('Map loaded with MapTiler basemap and Mapbox tileset layers');
     });
+    
+    // Setup popup handlers for all layers
+    function setupPopupHandlers() {
+      // Change cursor on hover
+      map.on('mouseenter', 'peds-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'peds-layer', () => { map.getCanvas().style.cursor = ''; });
+      map.on('mouseenter', 'vehicles-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'vehicles-layer', () => { map.getCanvas().style.cursor = ''; });
+      map.on('mouseenter', 'plos-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'plos-layer', () => { map.getCanvas().style.cursor = ''; });
+      
+      // Pedestrian Density popup
+      map.on('click', 'peds-layer', (e) => {
+        const props = e.features[0].properties;
+        const btwRational = parseFloat(props.Btw_Rational) || 0;
+        const apUser = parseFloat(props.Apprx) || 0;
+        const length = parseFloat(props.__Length) || 0;
+        const morningUser = parseFloat(props.Morning) || 0;
+        const dayUser = parseFloat(props.Day) || 0;
+        const nightUser = parseFloat(props.Night) || 0;
+        
+        // Round to 2 decimal places
+        const apUserRounded = apUser.toFixed(2);
+        const lengthRounded = length.toFixed(2);
+        const morningRounded = morningUser.toFixed(2);
+        const dayRounded = dayUser.toFixed(2);
+        const nightRounded = nightUser.toFixed(2);
+        
+        // Determine class based on Jenks breaks
+        let densityClass = '';
+        let classColor = '';
+        
+        if (btwRational < 3.470) {
+            densityClass = 'Very Low (0 - 3.5)';
+            classColor = '#FFE5D9';
+        } else if (btwRational < 9.920) {
+            densityClass = 'Low (3.5 - 9.9)';
+            classColor = '#FFCCB3';
+        } else if (btwRational < 16.430) {
+            densityClass = 'Low-Medium (9.9 - 16.4)';
+            classColor = '#FFB399';
+        } else if (btwRational < 23.720) {
+            densityClass = 'Medium (16.4 - 23.7)';
+            classColor = '#FF9980';
+        } else if (btwRational < 31.130) {
+            densityClass = 'Medium-High (23.7 - 31.1)';
+            classColor = '#FF8066';
+        } else if (btwRational < 39.180) {
+            densityClass = 'High (31.1 - 39.2)';
+            classColor = '#FF664D';
+        } else if (btwRational < 47.010) {
+            densityClass = 'Very High (39.2 - 47)';
+            classColor = '#FF4D33';
+        } else if (btwRational < 54.760) {
+            densityClass = 'Extremely High (47 - 54.8)';
+            classColor = '#FF331A';
+        } else if (btwRational < 64.030) {
+            densityClass = 'Critical (54.8 - 64)';
+            classColor = '#E62E00';
+        } else if (btwRational < 74.250) {
+            densityClass = 'Very Critical (64 - 74.3)';
+            classColor = '#CC2900';
+        } else if (btwRational < 84.600) {
+            densityClass = 'Severe (74.3 - 84.6)';
+            classColor = '#B32400';
+        } else {
+            densityClass = 'Extreme (84.6+)';
+            classColor = '#991F00';
+        }
+        
+        new mapboxgl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div style="padding: 12px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-width: 200px;">
+              <strong style="font-size: 12px; color: #1a1a1a; display: block; margin-bottom: 10px;">Pedestrian Usage</strong>
+              <div style="margin: 0 0 10px 0; padding: 10px; background: #f8f8f8; border-radius: 5px;">
+                <div style="font-size: 10px; color: #666; margin-bottom: 4px;">Average User/Day</div>
+                <strong style="font-size: 16px; color: ${classColor}; line-height: 1.2;">${apUserRounded}</strong>
+              </div>
+              <div style="margin: 0 0 10px 0; padding: 8px; background: white; border-radius: 5px; border: 1px solid #e8e8e8;">
+                <div style="font-size: 10px; color: #666; margin-bottom: 3px;">Density Classification</div>
+                <strong style="font-size: 11px; color: ${classColor}; line-height: 1.3;">${densityClass}</strong>
+              </div>
+              <div style="margin: 0 0 10px 0; padding: 8px; background: white; border-radius: 5px; border: 1px solid #e8e8e8;">
+                <div style="font-size: 10px; color: #666; margin-bottom: 3px;">Segment Length</div>
+                <strong style="font-size: 11px; color: #1a1a1a;">${lengthRounded} m</strong>
+              </div>
+              <div style="margin: 0; padding: 10px; background: linear-gradient(135deg, ${classColor}15, ${classColor}08); border-radius: 5px; border-left: 3px solid ${classColor};">
+                <strong style="font-size: 11px; color: #333; display: block; margin-bottom: 6px;">Usage by Time Period</strong>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 10px; color: #666;">Morning</span>
+                    <strong style="font-size: 11px; color: #1a1a1a;">${morningRounded}</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 10px; color: #666;">Day</span>
+                    <strong style="font-size: 11px; color: #1a1a1a;">${dayRounded}</strong>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 10px; color: #666;">Night</span>
+                    <strong style="font-size: 11px; color: #1a1a1a;">${nightRounded}</strong>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `)
+          .addTo(map);
+      });
+      
+      // Vehicle Density popup
+      map.on('click', 'vehicles-layer', (e) => {
+        const props = e.features[0].properties;
+        const density = parseFloat(props['11:00:00']) || 0;
+        const length = parseFloat(props.__Length) || 0;
+        
+        // Round to 2 decimal places
+        const densityRounded = density.toFixed(2);
+        const lengthRounded = length.toFixed(2);
+        
+        let densityClass = '';
+        let classColor = '';
+        
+        // Match pedestrian Jenks classification with peach-to-red gradient
+        if (density < 3.470) {
+          densityClass = 'Very Low (0 - 3.5)';
+          classColor = '#FFE5D9';
+        } else if (density < 9.920) {
+          densityClass = 'Low (3.5 - 9.9)';
+          classColor = '#FFCCB3';
+        } else if (density < 16.430) {
+          densityClass = 'Low-Medium (9.9 - 16.4)';
+          classColor = '#FFB399';
+        } else if (density < 23.720) {
+          densityClass = 'Medium (16.4 - 23.7)';
+          classColor = '#FF9980';
+        } else if (density < 31.130) {
+          densityClass = 'Medium-High (23.7 - 31.1)';
+          classColor = '#FF8066';
+        } else if (density < 39.180) {
+          densityClass = 'High (31.1 - 39.2)';
+          classColor = '#FF664D';
+        } else if (density < 47.010) {
+          densityClass = 'Very High (39.2 - 47)';
+          classColor = '#FF4D33';
+        } else if (density < 54.760) {
+          densityClass = 'Extremely High (47 - 54.8)';
+          classColor = '#FF331A';
+        } else if (density < 64.030) {
+          densityClass = 'Critical (54.8 - 64)';
+          classColor = '#E62E00';
+        } else if (density < 74.250) {
+          densityClass = 'Very Critical (64 - 74.3)';
+          classColor = '#CC2900';
+        } else if (density < 84.600) {
+          densityClass = 'Severe (74.3 - 84.6)';
+          classColor = '#B32400';
+        } else {
+          densityClass = 'Extreme (84.6+)';
+          classColor = '#991F00';
+        }
+        
+        new mapboxgl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div style="padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-width: 200px;">
+              <strong style="font-size: 13px; color: #1a1a1a; display: block; margin-bottom: 12px;">Vehicle Density</strong>
+              <div style="margin: 0 0 12px 0; padding: 12px; background: #f8f9fa; border-radius: 8px; border-left: 3px solid ${classColor};">
+                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">Density Value (11:00)</div>
+                <strong style="font-size: 16px; color: #212529;">${densityRounded}</strong>
+              </div>
+              <div style="margin: 0 0 8px 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">Classification</div>
+                <strong style="font-size: 12px; color: ${classColor};">${densityClass}</strong>
+              </div>
+              <div style="margin: 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">Segment Length</div>
+                <strong style="font-size: 12px; color: #212529;">${lengthRounded} m</strong>
+              </div>
+            </div>
+          `)
+          .addTo(map);
+      });
+      
+      // PLOS popup
+      map.on('click', 'plos-layer', (e) => {
+        const props = e.features[0].properties;
+        const plosValue = parseFloat(props.PLOS_Edit) || 0;
+        const length = parseFloat(props.__Length) || 0;
+        
+        // Round to 2 decimal places
+        const plosRounded = plosValue.toFixed(2);
+        const lengthRounded = length.toFixed(2);
+        
+        let losGrade = '';
+        let adequacy = '';
+        let gradeColor = '';
+        
+        if (plosValue < 1.5) {
+          losGrade = 'A';
+          adequacy = 'Excellent - Adequate';
+          gradeColor = '#52C41A';
+        } else if (plosValue < 2.5) {
+          losGrade = 'B';
+          adequacy = 'Good - Adequate';
+          gradeColor = '#73D13D';
+        } else if (plosValue < 3.5) {
+          losGrade = 'C';
+          adequacy = 'Fair - Marginally Adequate';
+          gradeColor = '#95DE64';
+        } else if (plosValue < 4.5) {
+          losGrade = 'D';
+          adequacy = 'Poor - Inadequate';
+          gradeColor = '#8C8C8C';
+        } else if (plosValue < 5.5) {
+          losGrade = 'E';
+          adequacy = 'Very Poor - Inadequate';
+          gradeColor = '#722ED1';
+        } else if (plosValue < 6.5) {
+          losGrade = 'E+';
+          adequacy = 'Critical - Inadequate';
+          gradeColor = '#9254DE';
+        } else if (plosValue < 10.0) {
+          losGrade = 'F';
+          adequacy = 'Failing - Severely Inadequate';
+          gradeColor = '#B37FEB';
+        } else {
+          losGrade = 'F+';
+          adequacy = 'Critical Failure - Severely Inadequate';
+          gradeColor = '#EB2F96';
+        }
+        
+        new mapboxgl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div style="padding: 16px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-width: 220px;">
+              <strong style="font-size: 13px; color: #1a1a1a; display: block; margin-bottom: 12px;">Pedestrian Level of Service</strong>
+              <div style="margin: 0 0 12px 0; padding: 12px; background: #f8f9fa; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">PLOS Score</div>
+                  <strong style="font-size: 16px; color: #212529;">${plosRounded}</strong>
+                </div>
+                <div style="text-align: right;">
+                  <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">Grade</div>
+                  <strong style="font-size: 24px; color: ${gradeColor}; font-weight: bold;">${losGrade}</strong>
+                </div>
+              </div>
+              <div style="margin: 0 0 8px 0; padding: 10px; background: #f8f9fa; border-radius: 8px; border-left: 3px solid ${gradeColor};">
+                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">Service Level</div>
+                <strong style="font-size: 11px; color: #212529; line-height: 1.4;">${adequacy}</strong>
+              </div>
+              <div style="margin: 0; padding: 10px; background: #f8f9fa; border-radius: 8px;">
+                <div style="font-size: 10px; color: #6c757d; margin-bottom: 4px;">Segment Length</div>
+                <strong style="font-size: 12px; color: #212529;">${lengthRounded} m</strong>
+              </div>
+            </div>
+          `)
+          .addTo(map);
+      });
+    }
 
-    // Basemap switcher using MapTiler styles (same as your original)
+    // Basemap switcher using MapTiler styles
     const BASEMAPS = [
       { 
         id: "satellite", 
@@ -395,7 +858,6 @@
       btn.addEventListener("click", () => {
         if (id === activeId) return;
         
-        // Store current camera position and layer visibility
         const center = map.getCenter();
         const zoom = map.getZoom();
         const bearing = map.getBearing();
@@ -406,22 +868,20 @@
           visibilityStates[key] = layerManager.visibility[key];
         });
         
-        // Change the map style (MapTiler basemap)
         map.setStyle(style);
         
-        // Re-add layers after style loads and restore visibility
         map.once('styledata', () => {
-          // Restore camera position
           map.jumpTo({ center, zoom, bearing, pitch });
           
-          // Rebuild layers with previous visibility states
           Object.keys(layerManager.layers).forEach(key => {
             layerManager._add(key);
             layerManager.setVisible(key, visibilityStates[key]);
           });
+          
+          // Re-add popup handlers after basemap change
+          setTimeout(() => setupPopupHandlers(), 200);
         });
         
-        // Update UI
         bmPanel.querySelectorAll("button").forEach(b => b.classList.remove("ring", "ring-blue-500"));
         btn.classList.add("ring", "ring-blue-500");
         activeId = id;
@@ -439,29 +899,65 @@
 
   <!-- Landing overlay -->
   <div id="landing" class="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-md">
-    <div class="w-[min(92vw,560px)] rounded-2xl bg-white/80 border border-white/60 shadow-xl p-6">
-      <div class="flex items-center gap-4 mb-4">
-        <img src="./assets/MIT.svg" alt="MIT" class="h-8 w-auto scale-[0.8]" />
-        <div class="brand-text flex items-center gap-3">
-          <img src="./assets/SA+P.svg" alt="SA+P" class="h-8 w-auto ml-[-30px] scale-[0.6]" />
-          <img src="./assets/SBX.svg" alt="SBX" class="h-8 w-auto ml-[80px] scale-[1.3]" />
+    <div class="w-[min(92vw,580px)] rounded-2xl bg-white/80 border border-white/60 shadow-xl p-6">
+      <div class="flex items-center justify-between gap-4 mb-4 pb-4 border-b-2 border-black">
+        <div class="flex items-center gap-4">
+          <img src="./assets/MIT.svg" alt="MIT" class="h-8 w-auto scale-[0.8]" />
+          <div class="flex items-center gap-3">
+            <img src="./assets/SA+P.svg" alt="SA+P" class="h-8 w-auto ml-[-30px] scale-[0.6]" />
+            <img src="./assets/SBX.svg" alt="SBX" class="h-8 w-auto ml-[200px] scale-[1.3]" />
+          </div>
         </div>
       </div>
-      <p class="text-sm text-neutral-700 mb-4">A brief intro or disclaimer goes here.</p>
+      
+      <div class="disclaimer__content">
+        <div class="disclaimer__item">
+          <h3>Identification</h3>
+          <p>
+            This web map is developed to identify traffic and pedestrian density patterns in the South Bronx
+            and to support design strategies for safer, more accessible streets.
+          </p>
+        </div>
+
+        <div class="disclaimer__item">
+          <h3>Use</h3>
+          <p>
+            The map is intended for planning and design exploration only. It helps visualize where movement
+            demand is concentrated and highlights areas that may require improvement (e.g., safety, comfort,
+            connectivity). Results should be interpreted as indicators—not as precise measurements of real-time
+            conditions.
+          </p>
+        </div>
+
+        <div class="disclaimer__item">
+          <h3>Source</h3>
+          <p>
+            This work is based on collective research and publicly available datasets, primarily from NYC Open Data
+            and related open data sources. Data accuracy, completeness, and timeliness may vary by dataset and
+            update cycle.
+          </p>
+        </div>
+
+        <div class="disclaimer__item">
+          <h3>Notes</h3>
+          <p>
+            Street conditions may change over time due to construction, seasonal patterns, or policy updates.
+            Users should supplement this map with field observation and community input when making decisions.
+          </p>
+        </div>
+      </div>
+      
       <div class="flex items-center gap-2">
         <button id="enterBtn" class="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 font-medium hover:bg-black/90">Enter</button>
-        <button id="skipOnceBtn" class="inline-flex items-center justify-center rounded-lg bg-white/70 border border-neutral-300 px-4 py-2 font-medium hover:bg-white">Skip for this session</button>
       </div>
     </div>
   </div>
   <script>
     const landing = document.getElementById('landing');
     const enterBtn = document.getElementById('enterBtn');
-    const skipOnceBtn = document.getElementById('skipOnceBtn');
     if (sessionStorage.getItem('skip-landing') === '1') landing.classList.add('hidden');
     function closeLanding(){ landing.classList.add('hidden'); }
     enterBtn.addEventListener('click', closeLanding);
-    skipOnceBtn.addEventListener('click', () => { sessionStorage.setItem('skip-landing', '1'); closeLanding(); });
   </script>
 </body>
 </html>
