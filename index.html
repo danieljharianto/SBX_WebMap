@@ -304,7 +304,7 @@
       </div>
     </div>
     <div class="flex items-center">
-      <img src="./assets/People_S.png" class="h-8 mr-[205px] scale-[1.50]"/>
+      <img src="./assets/People_S.png" class="h-8 mr-[250px] scale-[1.70]"/>
     </div>
   </header>
 
@@ -479,26 +479,53 @@
                 potential intervention strategies for improving walkability and safety in the South Bronx.
               </p>
               
-              <h3 class="text-xs font-semibold mb-2">Priority Areas</h3>
-              <ul class="list-disc pl-5 space-y-2 text-justify">
-                <li>High-density pedestrian corridors requiring improved sidewalk infrastructure</li>
-                <li>Intersections with elevated safety concerns</li>
-                <li>Transit nodes with connectivity gaps</li>
-                <li>Underutilized waterfront areas with activation potential</li>
-              </ul>
+              <h3 class="text-xs font-semibold mb-2">Priority Locations</h3>
+              <p class="text-justify leading-relaxed mb-3">
+                Select a priority location to view detailed intervention recommendations and design strategies 
+                for improving pedestrian infrastructure and safety.
+              </p>
               
-              <h3 class="text-xs font-semibold mb-2 mt-4">Design Strategies</h3>
-              <ul class="list-disc pl-5 space-y-2 text-justify">
-                <li>Pedestrian-priority street redesigns</li>
-                <li>Traffic calming measures in residential areas</li>
-                <li>Enhanced crossings and wayfinding systems</li>
-                <li>Green infrastructure and public space integration</li>
-              </ul>
+              <div class="mb-4">
+                <label for="priorityLocationSelect" class="block text-xs font-medium text-gray-700 mb-2">
+                  Select Location
+                </label>
+                <select 
+                  id="priorityLocationSelect" 
+                  class="w-full px-3 py-2 text-xs border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                >
+                  <option value="">-- Choose a location --</option>
+                  <option value="lincoln-ave">Lincoln Avenue</option>
+                  <option value="138-st">138th Street</option>
+                  <option value="134-st">134th Street</option>
+                  <option value="bruckner-blvd">Bruckner Boulevard</option>
+                  <option value="e133-st">E 133rd Street</option>
+                  <option value="132nd-st">132nd Street</option>
+                </select>
+              </div>
               
-              <div class="mt-4 p-3 bg-blue-50 rounded border border-blue-200">
-                <p class="text-xs text-blue-800">
-                  <strong>Coming Soon:</strong> Interactive intervention mapping and design visualization tools 
-                  will be added to this section.
+              <!-- Location Details Container (will be populated when location is selected) -->
+              <div id="locationDetails" class="hidden">
+                <div class="p-3 bg-blue-50 rounded-lg border border-blue-200 mb-3">
+                  <h4 class="text-xs font-semibold text-blue-900 mb-1" id="locationName"></h4>
+                  <p class="text-xs text-blue-800" id="locationDescription"></p>
+                </div>
+                
+                <h3 class="text-xs font-semibold mb-2 mt-3">Recommended Interventions</h3>
+                <ul id="interventionsList" class="list-disc pl-5 space-y-1 text-xs text-gray-700">
+                  <!-- Will be populated dynamically -->
+                </ul>
+                
+                <h3 class="text-xs font-semibold mb-2 mt-3">Design Strategies</h3>
+                <ul id="strategiesList" class="list-disc pl-5 space-y-1 text-xs text-gray-700">
+                  <!-- Will be populated dynamically -->
+                </ul>
+              </div>
+              
+              <!-- Default message when no location is selected -->
+              <div id="defaultMessage" class="mt-4 p-3 bg-gray-50 rounded border border-gray-200">
+                <p class="text-xs text-gray-600">
+                  Select a priority location from the dropdown above to view specific intervention strategies 
+                  and design recommendations.
                 </p>
               </div>
             </div>
@@ -1580,6 +1607,155 @@
       });
 
       bmPanel.appendChild(btn);
+    });
+  </script>
+
+  <script>
+    // Priority Locations Data
+    const PRIORITY_LOCATIONS = {
+      'lincoln-ave': {
+        name: 'Lincoln Avenue',
+        description: 'Major north-south corridor with high pedestrian activity and mixed traffic conditions.',
+        interventions: [
+          'Widen sidewalks to accommodate high pedestrian volumes',
+          'Install protected bike lanes to separate cyclists from vehicular traffic',
+          'Add pedestrian refuge islands at wide intersections',
+          'Improve street lighting for nighttime safety'
+        ],
+        strategies: [
+          'Traffic calming measures including speed bumps and raised crosswalks',
+          'Green infrastructure integration with street trees and bioswales',
+          'Enhanced bus stop amenities and shelters',
+          'Public art installations to activate streetscape'
+        ]
+      },
+      '138-st': {
+        name: '138th Street',
+        description: 'Key east-west connector with transit hub and commercial activity.',
+        interventions: [
+          'Redesign crosswalks with high-visibility markings and countdown timers',
+          'Implement curb extensions (bulb-outs) at key intersections',
+          'Add wayfinding signage to connect transit nodes',
+          'Create pedestrian plaza at transit hub'
+        ],
+        strategies: [
+          'Pedestrian-priority design at subway station entrances',
+          'Tactical urbanism interventions for quick wins',
+          'Coordination with MTA for seamless multimodal connections',
+          'Public space activation through seating and landscaping'
+        ]
+      },
+      '134-st': {
+        name: '134th Street',
+        description: 'Residential corridor requiring traffic calming and safety improvements.',
+        interventions: [
+          'Implement 20 mph slow zones in residential blocks',
+          'Install speed cushions to reduce vehicle speeds',
+          'Add zebra crossings at mid-block locations',
+          'Improve sight lines by removing visual obstructions'
+        ],
+        strategies: [
+          'Community-led street safety audits',
+          'School zone enhancements with crossing guards',
+          'Parklet installations to reclaim street space',
+          'Green infrastructure for stormwater management'
+        ]
+      },
+      'bruckner-blvd': {
+        name: 'Bruckner Boulevard',
+        description: 'High-speed arterial requiring pedestrian safety enhancements and crossing improvements.',
+        interventions: [
+          'Install pedestrian overpasses or underpasses at key locations',
+          'Reduce number of traffic lanes and narrow lane widths',
+          'Add median barriers with pedestrian refuge areas',
+          'Implement leading pedestrian intervals (LPI) at signals'
+        ],
+        strategies: [
+          'Complete streets redesign to balance all modes',
+          'Vision Zero safety improvements at crash hotspots',
+          'Noise reduction barriers for adjacent residential areas',
+          'Gateway treatments to signal transition to neighborhood context'
+        ]
+      },
+      'e133-st': {
+        name: 'E 133rd Street',
+        description: 'Mixed-use corridor with connectivity gaps and pedestrian infrastructure needs.',
+        interventions: [
+          'Fill sidewalk gaps and repair damaged pavement',
+          'Install ADA-compliant curb ramps at all intersections',
+          'Add street furniture (benches, trash receptacles)',
+          'Improve drainage to prevent sidewalk flooding'
+        ],
+        strategies: [
+          'Complete sidewalk network for continuous pedestrian routes',
+          'Activate ground floor retail frontages',
+          'Create public gathering spaces at key nodes',
+          'Coordinate with property owners for facade improvements'
+        ]
+      },
+      '132nd-st': {
+        name: '132nd Street',
+        description: 'Emerging corridor with potential for pedestrian-oriented redevelopment.',
+        interventions: [
+          'Create shared streets with pedestrian priority zones',
+          'Install decorative paving and street furniture',
+          'Add bike parking and bicycle repair stations',
+          'Implement parklets and outdoor dining areas'
+        ],
+        strategies: [
+          'Mixed-use development incentives for active ground floors',
+          'Public-private partnerships for streetscape improvements',
+          'Placemaking initiatives with community input',
+          'Pilot projects for innovative street design solutions'
+        ]
+      }
+    };
+
+    // Handle dropdown selection
+    const priorityLocationSelect = document.getElementById('priorityLocationSelect');
+    const locationDetails = document.getElementById('locationDetails');
+    const defaultMessage = document.getElementById('defaultMessage');
+    const locationName = document.getElementById('locationName');
+    const locationDescription = document.getElementById('locationDescription');
+    const interventionsList = document.getElementById('interventionsList');
+    const strategiesList = document.getElementById('strategiesList');
+
+    priorityLocationSelect?.addEventListener('change', (e) => {
+      const selectedValue = e.target.value;
+      
+      if (selectedValue && PRIORITY_LOCATIONS[selectedValue]) {
+        const location = PRIORITY_LOCATIONS[selectedValue];
+        
+        // Update location details
+        locationName.textContent = location.name;
+        locationDescription.textContent = location.description;
+        
+        // Populate interventions list
+        interventionsList.innerHTML = '';
+        location.interventions.forEach(intervention => {
+          const li = document.createElement('li');
+          li.textContent = intervention;
+          interventionsList.appendChild(li);
+        });
+        
+        // Populate strategies list
+        strategiesList.innerHTML = '';
+        location.strategies.forEach(strategy => {
+          const li = document.createElement('li');
+          li.textContent = strategy;
+          strategiesList.appendChild(li);
+        });
+        
+        // Show details, hide default message
+        locationDetails.classList.remove('hidden');
+        defaultMessage.classList.add('hidden');
+        
+        console.log('Selected priority location:', location.name);
+      } else {
+        // Hide details, show default message
+        locationDetails.classList.add('hidden');
+        defaultMessage.classList.remove('hidden');
+      }
     });
   </script>
 
