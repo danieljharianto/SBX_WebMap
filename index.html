@@ -111,6 +111,113 @@
       color: #4b5563;
       margin: 0;
     }
+    
+    /* Simple PLOS Bar Chart */
+    .plos-chart-section {
+      margin-top: 16px;
+      display: none;
+    }
+    
+    .plos-chart-section.active {
+      display: block;
+    }
+    
+    .plos-chart-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    
+    /* Range Slider */
+    .plos-slider-container {
+      position: relative;
+      height: 30px;
+      margin-bottom: 20px;
+      padding: 0 4px;
+    }
+    
+    .plos-slider-track {
+      position: absolute;
+      top: 13px;
+      left: 4px;
+      right: 4px;
+      height: 4px;
+      background: #ddd;
+      border-radius: 2px;
+    }
+    
+    .plos-slider-range {
+      position: absolute;
+      height: 100%;
+      background: #4a90e2;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+    
+    .plos-slider-handle {
+      position: absolute;
+      top: 7px;
+      width: 16px;
+      height: 16px;
+      background: #4a90e2;
+      border: 2px solid white;
+      border-radius: 50%;
+      cursor: grab;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      transform: translateX(-8px);
+      z-index: 10;
+    }
+    
+    .plos-slider-handle:active {
+      cursor: grabbing;
+    }
+    
+    .plos-bars-container {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      height: 120px;
+      gap: 4px;
+      padding: 0 4px;
+      margin-top: 8px;
+    }
+    
+    .plos-bar-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+    }
+    
+    .plos-bar-column {
+      width: 100%;
+      border-radius: 2px 2px 0 0;
+      transition: opacity 0.2s;
+      min-height: 2px;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    
+    .plos-bar-item.dimmed .plos-bar-column {
+      opacity: 0.2;
+    }
+    
+    .plos-bar-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #555;
+      text-align: center;
+    }
+    
+    .plos-bar-value {
+      font-size: 8px;
+      color: #999;
+      text-align: center;
+      line-height: 1.2;
+    }
   </style>
 </head>
 
@@ -130,7 +237,7 @@
       </div>
     </div>
     <div class="flex items-center">
-      <img src="./assets/People_S.png" class="h-8 mr-[185px] scale-[1.80]"/>
+      <img src="./assets/People_S.png" class="h-8 mr-[250px] scale-[1.70]"/>
     </div>
   </header>
 
@@ -201,6 +308,24 @@
                   <span>Pedestrian Level of Service</span>
                 </li>
               </ul>
+              
+              <!-- PLOS Chart Section -->
+              <div id="plosChartSection" class="plos-chart-section">
+                <div class="plos-chart-title">PLOS Distribution</div>
+                
+                <!-- Range Slider -->
+                <div class="plos-slider-container">
+                  <div class="plos-slider-track">
+                    <div class="plos-slider-range" id="plosSliderRange"></div>
+                  </div>
+                  <div class="plos-slider-handle" id="plosHandleLeft"></div>
+                  <div class="plos-slider-handle" id="plosHandleRight"></div>
+                </div>
+                
+                <div class="plos-bars-container" id="plosBarsContainer">
+                  <!-- Bars will be generated here -->
+                </div>
+              </div>
               
               <div class="mt-4 p-3 bg-gray-50 rounded border border-gray-200">
                 <p class="text-xs text-gray-600">
@@ -466,36 +591,331 @@
     const PLOS_LAYER = {
       key: 'plos',
       tilesetId: 'danielharianto.dq3dkrke',
-      layerId: 'plos-layer',
-      sourceLayer: 'pedestrian_plos-cdosep',
-      type: 'line',
-      paint: {
-        'line-color': [
-          'step',
-          ['get', 'PLOS_Edit'],
-          '#52C41A',  // 0.0-1.5: Bright Green
-          1.5, '#73D13D',  // 1.5-2.5: Light Green
-          2.5, '#95DE64',  // 2.5-3.5: Pale Green
-          3.5, '#8C8C8C',  // 3.5-4.5: Medium Gray
-          4.5, '#722ED1',  // 4.5-5.5: Deep Purple
-          5.5, '#9254DE',  // 5.5-6.5: Purple
-          6.5, '#B37FEB',  // 6.5-10.0: Light Purple/Pink
-          10.0, '#EB2F96'  // 10.0-40.0: Bright Pink
-        ],
-        'line-width': 10,
-        'line-opacity': 0.9
-      },
-      layout: {
-        'line-join': 'round',
-        'line-cap': 'round'
-      }
+      sourceLayer: 'pedestrian_plos-cdosep'
     };
+    
+    // Create 8 separate layers for each PLOS grade
+    const PLOS_GRADE_LAYERS = [
+      {
+        key: 'plos-A',
+        layerId: 'plos-layer-A',
+        grade: 'A',
+        color: '#00CC00',  // Green
+        min: 0,
+        max: 1.5
+      },
+      {
+        key: 'plos-B',
+        layerId: 'plos-layer-B',
+        grade: 'B',
+        color: '#77CC00',  // Yellow-Green
+        min: 1.5,
+        max: 2.5
+      },
+      {
+        key: 'plos-C',
+        layerId: 'plos-layer-C',
+        grade: 'C',
+        color: '#CCCC00',  // Yellow
+        min: 2.5,
+        max: 3.5
+      },
+      {
+        key: 'plos-D',
+        layerId: 'plos-layer-D',
+        grade: 'D',
+        color: '#FFCC00',  // Yellow-Orange
+        min: 3.5,
+        max: 4.5
+      },
+      {
+        key: 'plos-E',
+        layerId: 'plos-layer-E',
+        grade: 'E',
+        color: '#FF9900',  // Orange
+        min: 4.5,
+        max: 5.5
+      },
+      {
+        key: 'plos-E+',
+        layerId: 'plos-layer-E-plus',
+        grade: 'E+',
+        color: '#FF6600',  // Orange-Red
+        min: 5.5,
+        max: 6.5
+      },
+      {
+        key: 'plos-F',
+        layerId: 'plos-layer-F',
+        grade: 'F',
+        color: '#FF3300',  // Red
+        min: 6.5,
+        max: 10.0
+      },
+      {
+        key: 'plos-F+',
+        layerId: 'plos-layer-F-plus',
+        grade: 'F+',
+        color: '#CC0000',  // Dark Red
+        min: 10.0,
+        max: 100
+      }
+    ];
+
+    // PLOS Chart functionality
+    const plosChartSection = document.getElementById('plosChartSection');
+    const plosBarsContainer = document.getElementById('plosBarsContainer');
+    const plosHandleLeft = document.getElementById('plosHandleLeft');
+    const plosHandleRight = document.getElementById('plosHandleRight');
+    const plosSliderRange = document.getElementById('plosSliderRange');
+    
+    let plosData = [];
+    let leftIndex = 0;
+    let rightIndex = 7;
+    let isDraggingLeft = false;
+    let isDraggingRight = false;
+    let sliderTrackRect = null;
+    
+    // PLOS grade definitions with colors
+    const PLOS_GRADES = [
+      { grade: 'A', min: 0, max: 1.5, color: '#00CC00', label: 'A' },
+      { grade: 'B', min: 1.5, max: 2.5, color: '#77CC00', label: 'B' },
+      { grade: 'C', min: 2.5, max: 3.5, color: '#CCCC00', label: 'C' },
+      { grade: 'D', min: 3.5, max: 4.5, color: '#FFCC00', label: 'D' },
+      { grade: 'E', min: 4.5, max: 5.5, color: '#FF9900', label: 'E' },
+      { grade: 'E+', min: 5.5, max: 6.5, color: '#FF6600', label: 'E+' },
+      { grade: 'F', min: 6.5, max: 10.0, color: '#FF3300', label: 'F' },
+      { grade: 'F+', min: 10.0, max: 100, color: '#CC0000', label: 'F+' }
+    ];
+    
+    // Calculate PLOS data from map features
+    function calculatePlosData() {
+      const features = map.querySourceFeatures('plos-source', {
+        sourceLayer: PLOS_LAYER.sourceLayer
+      });
+      
+      const totals = {};
+      PLOS_GRADES.forEach(g => totals[g.grade] = 0);
+      
+      features.forEach(feature => {
+        const plosValue = parseFloat(feature.properties.PLOS_Edit) || 0;
+        const length = parseFloat(feature.properties.__Length) || 0;
+        
+        const grade = PLOS_GRADES.find(g => plosValue >= g.min && plosValue < g.max);
+        if (grade) {
+          totals[grade.grade] += length;
+        }
+      });
+      
+      const totalLength = Object.values(totals).reduce((a, b) => a + b, 0);
+      
+      plosData = PLOS_GRADES.map(g => ({
+        grade: g.grade,
+        label: g.label,
+        color: g.color,
+        length: totals[g.grade],
+        lengthMiles: (totals[g.grade] * 0.000621371).toFixed(1),
+        percent: totalLength > 0 ? ((totals[g.grade] / totalLength) * 100).toFixed(1) : 0
+      }));
+      
+      return plosData;
+    }
+    
+    // Render simple bar chart
+    function renderPlosChart() {
+      plosBarsContainer.innerHTML = '';
+      
+      if (plosData.length === 0) return;
+      
+      const maxLength = Math.max(...plosData.map(d => d.length));
+      const maxBarHeight = 100; // Max height in pixels
+      
+      plosData.forEach((data, index) => {
+        const heightPx = maxLength > 0 ? Math.max(5, (data.length / maxLength) * maxBarHeight) : 5;
+        
+        const barItem = document.createElement('div');
+        barItem.className = 'plos-bar-item';
+        barItem.dataset.index = index;
+        
+        // Apply dimmed state if outside range
+        if (index < leftIndex || index > rightIndex) {
+          barItem.classList.add('dimmed');
+        }
+        
+        const barDiv = document.createElement('div');
+        barDiv.className = 'plos-bar-value';
+        barDiv.innerHTML = `${data.lengthMiles}k<br>${data.percent}%`;
+        
+        const barColumn = document.createElement('div');
+        barColumn.className = 'plos-bar-column';
+        barColumn.style.height = `${heightPx}px`;
+        barColumn.style.backgroundColor = data.color;
+        
+        const labelDiv = document.createElement('div');
+        labelDiv.className = 'plos-bar-label';
+        labelDiv.textContent = data.label;
+        
+        barItem.appendChild(barDiv);
+        barItem.appendChild(barColumn);
+        barItem.appendChild(labelDiv);
+        
+        plosBarsContainer.appendChild(barItem);
+      });
+      
+      updateSliderPosition();
+      
+      // Apply filter after a short delay to ensure layer is ready
+      setTimeout(() => {
+        updatePlosFilter();
+      }, 100);
+      
+      console.log('PLOS chart rendered with', plosData.length, 'bars');
+    }
+    
+    // Update slider positions
+    function updateSliderPosition() {
+      if (!sliderTrackRect || plosData.length === 0) {
+        const track = document.querySelector('.plos-slider-track');
+        if (track) sliderTrackRect = track.getBoundingClientRect();
+        else return;
+      }
+      
+      const trackWidth = sliderTrackRect.width;
+      const stepWidth = trackWidth / (plosData.length - 1);
+      
+      const leftPos = leftIndex * stepWidth;
+      const rightPos = rightIndex * stepWidth;
+      
+      plosHandleLeft.style.left = `${leftPos + 4}px`;
+      plosHandleRight.style.left = `${rightPos + 4}px`;
+      
+      plosSliderRange.style.left = `${leftPos}px`;
+      plosSliderRange.style.width = `${rightPos - leftPos}px`;
+    }
+    
+    // Update PLOS layer visibility based on slider selection
+    function updatePlosFilter() {
+      console.log('Updating PLOS visibility - Range:', leftIndex, 'to', rightIndex);
+      
+      PLOS_GRADE_LAYERS.forEach((gradeLayer, index) => {
+        const layer = map.getLayer(gradeLayer.layerId);
+        if (!layer) {
+          console.warn('Layer not found:', gradeLayer.layerId);
+          return;
+        }
+        
+        // Show if within selected range, hide if outside
+        const shouldShow = index >= leftIndex && index <= rightIndex;
+        const visibility = shouldShow ? 'visible' : 'none';
+        
+        map.setLayoutProperty(gradeLayer.layerId, 'visibility', visibility);
+        
+        console.log(`  Grade ${gradeLayer.grade} (index ${index}):`, shouldShow ? 'VISIBLE' : 'HIDDEN');
+      });
+      
+      // Update bar dimming
+      const bars = plosBarsContainer.querySelectorAll('.plos-bar-item');
+      bars.forEach((bar, index) => {
+        if (index < leftIndex || index > rightIndex) {
+          bar.classList.add('dimmed');
+        } else {
+          bar.classList.remove('dimmed');
+        }
+      });
+    }
+    
+    // Get index from mouse position
+    function getIndexFromPosition(clientX) {
+      if (!sliderTrackRect) return 0;
+      const relativeX = clientX - sliderTrackRect.left;
+      const trackWidth = sliderTrackRect.width;
+      const stepWidth = trackWidth / (plosData.length - 1);
+      const index = Math.round(relativeX / stepWidth);
+      return Math.max(0, Math.min(index, plosData.length - 1));
+    }
+    
+    // Handle mouse move
+    function handleSliderMove(e) {
+      if (!isDraggingLeft && !isDraggingRight) return;
+      
+      const newIndex = getIndexFromPosition(e.clientX);
+      
+      if (isDraggingLeft) {
+        leftIndex = Math.min(newIndex, rightIndex);
+      } else if (isDraggingRight) {
+        rightIndex = Math.max(newIndex, leftIndex);
+      }
+      
+      updateSliderPosition();
+      updatePlosFilter();
+    }
+    
+    function handleSliderUp() {
+      isDraggingLeft = false;
+      isDraggingRight = false;
+    }
+    
+    // Event listeners for handles
+    plosHandleLeft.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      isDraggingLeft = true;
+      const track = document.querySelector('.plos-slider-track');
+      sliderTrackRect = track.getBoundingClientRect();
+    });
+    
+    plosHandleRight.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      isDraggingRight = true;
+      const track = document.querySelector('.plos-slider-track');
+      sliderTrackRect = track.getBoundingClientRect();
+    });
+    
+    document.addEventListener('mousemove', handleSliderMove);
+    document.addEventListener('mouseup', handleSliderUp);
 
     map.on('load', () => {
-      // Add all layers in order: Peds, Vehicles, PLOS
+      // Add all layers in order: Peds, Vehicles, PLOS (8 separate layers)
       layerManager.addTilesetLayer(PEDS_LAYER);
       layerManager.addTilesetLayer(VEHICLES_LAYER);
-      layerManager.addTilesetLayer(PLOS_LAYER);
+      
+      // Add source for PLOS data (shared by all 8 layers)
+      if (!map.getSource('plos-source')) {
+        map.addSource('plos-source', {
+          type: 'vector',
+          url: `mapbox://${PLOS_LAYER.tilesetId}`
+        });
+      }
+      
+      // Add 8 separate layers for each PLOS grade
+      PLOS_GRADE_LAYERS.forEach(gradeLayer => {
+        if (map.getLayer(gradeLayer.layerId)) {
+          map.removeLayer(gradeLayer.layerId);
+        }
+        
+        map.addLayer({
+          id: gradeLayer.layerId,
+          type: 'line',
+          source: 'plos-source',
+          'source-layer': PLOS_LAYER.sourceLayer,
+          filter: [
+            'all',
+            ['>=', ['get', 'PLOS_Edit'], gradeLayer.min],
+            ['<', ['get', 'PLOS_Edit'], gradeLayer.max]
+          ],
+          paint: {
+            'line-color': gradeLayer.color,
+            'line-width': 10,
+            'line-opacity': 0.9
+          },
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+            'visibility': 'none' // Start hidden
+          }
+        });
+        
+        console.log('Added PLOS layer:', gradeLayer.layerId, 'for grade', gradeLayer.grade);
+      });
 
       // Wire checkboxes to layer visibility
       const cbPeds = document.getElementById('cbPeds');
@@ -505,7 +925,15 @@
       const applyLayerVisibility = () => {
         layerManager.setVisible('peds', cbPeds?.checked);
         layerManager.setVisible('vehicles', cbVehicles?.checked);
-        layerManager.setVisible('plos', cbPLOS?.checked);
+        
+        // For PLOS, control all 8 grade layers
+        const plosVisible = cbPLOS?.checked;
+        PLOS_GRADE_LAYERS.forEach(gradeLayer => {
+          if (map.getLayer(gradeLayer.layerId)) {
+            map.setLayoutProperty(gradeLayer.layerId, 'visibility', plosVisible ? 'visible' : 'none');
+          }
+        });
+        
         debugLog(`Layer visibility - Peds: ${cbPeds?.checked}, Vehicles: ${cbVehicles?.checked}, PLOS: ${cbPLOS?.checked}`);
       };
 
@@ -514,6 +942,7 @@
         if (cbPeds.checked) {
           cbVehicles.checked = false;
           cbPLOS.checked = false;
+          plosChartSection.classList.remove('active');
         }
         applyLayerVisibility();
       });
@@ -522,6 +951,7 @@
         if (cbVehicles.checked) {
           cbPeds.checked = false;
           cbPLOS.checked = false;
+          plosChartSection.classList.remove('active');
         }
         applyLayerVisibility();
       });
@@ -530,6 +960,20 @@
         if (cbPLOS.checked) {
           cbPeds.checked = false;
           cbVehicles.checked = false;
+          
+          // Show PLOS chart and reset slider
+          setTimeout(() => {
+            calculatePlosData();
+            leftIndex = 0;
+            rightIndex = plosData.length - 1;
+            renderPlosChart();
+            plosChartSection.classList.add('active');
+          }, 500);
+        } else {
+          // Hide chart and reset
+          plosChartSection.classList.remove('active');
+          leftIndex = 0;
+          rightIndex = 7;
         }
         applyLayerVisibility();
       });
@@ -549,8 +993,12 @@
       map.on('mouseleave', 'peds-layer', () => { map.getCanvas().style.cursor = ''; });
       map.on('mouseenter', 'vehicles-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
       map.on('mouseleave', 'vehicles-layer', () => { map.getCanvas().style.cursor = ''; });
-      map.on('mouseenter', 'plos-layer', () => { map.getCanvas().style.cursor = 'pointer'; });
-      map.on('mouseleave', 'plos-layer', () => { map.getCanvas().style.cursor = ''; });
+      
+      // Add mouse handlers for all 8 PLOS grade layers
+      PLOS_GRADE_LAYERS.forEach(gradeLayer => {
+        map.on('mouseenter', gradeLayer.layerId, () => { map.getCanvas().style.cursor = 'pointer'; });
+        map.on('mouseleave', gradeLayer.layerId, () => { map.getCanvas().style.cursor = ''; });
+      });
       
       // Pedestrian Density popup
       map.on('click', 'peds-layer', (e) => {
@@ -724,8 +1172,8 @@
           .addTo(map);
       });
       
-      // PLOS popup
-      map.on('click', 'plos-layer', (e) => {
+      // PLOS popup - handle all 8 grade layers
+      const handlePlosClick = (e) => {
         const props = e.features[0].properties;
         const plosValue = parseFloat(props.PLOS_Edit) || 0;
         const length = parseFloat(props.__Length) || 0;
@@ -741,35 +1189,35 @@
         if (plosValue < 1.5) {
           losGrade = 'A';
           adequacy = 'Excellent - Adequate';
-          gradeColor = '#52C41A';
+          gradeColor = '#00CC00';
         } else if (plosValue < 2.5) {
           losGrade = 'B';
           adequacy = 'Good - Adequate';
-          gradeColor = '#73D13D';
+          gradeColor = '#77CC00';
         } else if (plosValue < 3.5) {
           losGrade = 'C';
           adequacy = 'Fair - Marginally Adequate';
-          gradeColor = '#95DE64';
+          gradeColor = '#CCCC00';
         } else if (plosValue < 4.5) {
           losGrade = 'D';
           adequacy = 'Poor - Inadequate';
-          gradeColor = '#8C8C8C';
+          gradeColor = '#FFCC00';
         } else if (plosValue < 5.5) {
           losGrade = 'E';
           adequacy = 'Very Poor - Inadequate';
-          gradeColor = '#722ED1';
+          gradeColor = '#FF9900';
         } else if (plosValue < 6.5) {
           losGrade = 'E+';
           adequacy = 'Critical - Inadequate';
-          gradeColor = '#9254DE';
+          gradeColor = '#FF6600';
         } else if (plosValue < 10.0) {
           losGrade = 'F';
           adequacy = 'Failing - Severely Inadequate';
-          gradeColor = '#B37FEB';
+          gradeColor = '#FF3300';
         } else {
           losGrade = 'F+';
           adequacy = 'Critical Failure - Severely Inadequate';
-          gradeColor = '#EB2F96';
+          gradeColor = '#CC0000';
         }
         
         new mapboxgl.Popup()
@@ -798,6 +1246,11 @@
             </div>
           `)
           .addTo(map);
+      };
+      
+      // Add click handler to all 8 PLOS grade layers
+      PLOS_GRADE_LAYERS.forEach(gradeLayer => {
+        map.on('click', gradeLayer.layerId, handlePlosClick);
       });
     }
 
