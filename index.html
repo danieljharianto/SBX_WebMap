@@ -218,6 +218,73 @@
       text-align: center;
       line-height: 1.2;
     }
+    
+    /* Map Legends in Sidebar */
+    .map-legend {
+      margin-top: 16px;
+      background: white;
+      padding: 12px;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+      display: none;
+    }
+    
+    .map-legend.active {
+      display: block;
+    }
+    
+    .legend-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .legend-gradient {
+      height: 20px;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    
+    .legend-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #666;
+    }
+    
+    .legend-items {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 10px;
+    }
+    
+    .legend-color-box {
+      width: 24px;
+      height: 16px;
+      border-radius: 3px;
+      border: 1px solid rgba(0,0,0,0.1);
+      flex-shrink: 0;
+    }
+    
+    .legend-label {
+      color: #333;
+      font-weight: 500;
+      flex: 1;
+    }
+    
+    .legend-value {
+      color: #666;
+      font-size: 9px;
+      margin-left: auto;
+    }
   </style>
 </head>
 
@@ -308,6 +375,73 @@
                   <span>Pedestrian Level of Service</span>
                 </li>
               </ul>
+              
+              <!-- Pedestrian Density Legend -->
+              <div id="pedestrianLegend" class="map-legend">
+                <div class="legend-title">Pedestrian Density</div>
+                <div class="legend-gradient" style="background: linear-gradient(to right, #FFE5D9, #FFCCB3, #FFB399, #FF9980, #FF8066, #FF664D, #FF4D33, #991F00);"></div>
+                <div class="legend-labels">
+                  <span>Low (&le;1,000)</span>
+                  <span>High (&ge;100,000)</span>
+                </div>
+              </div>
+              
+              <!-- Vehicle Traffic Legend -->
+              <div id="vehicleLegend" class="map-legend">
+                <div class="legend-title">Vehicle Traffic</div>
+                <div class="legend-gradient" style="background: linear-gradient(to right, #FFE5D9, #FFCCB3, #FFB399, #FF9980, #FF8066, #FF664D, #FF4D33, #991F00);"></div>
+                <div class="legend-labels">
+                  <span>Low (&le;100)</span>
+                  <span>High (&le;2,000)</span>
+                </div>
+              </div>
+              
+              <!-- PLOS Legend -->
+              <div id="plosLegend" class="map-legend">
+                <div class="legend-title">Level of Service</div>
+                <div class="legend-items">
+                  <div class="legend-item">
+                    <div class="legend-color-box" style="background-color: #00CC00;"></div>
+                    <span class="legend-label">A - Excellent</span>
+                    <span class="legend-value">0.0-1.5</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color-box" style="background-color: #77CC00;"></div>
+                    <span class="legend-label">B - Good</span>
+                    <span class="legend-value">1.5-2.5</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color-box" style="background-color: #CCCC00;"></div>
+                    <span class="legend-label">C - Fair</span>
+                    <span class="legend-value">2.5-3.5</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color-box" style="background-color: #FFCC00;"></div>
+                    <span class="legend-label">D - Poor</span>
+                    <span class="legend-value">3.5-4.5</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color-box" style="background-color: #FF9900;"></div>
+                    <span class="legend-label">E - Very Poor</span>
+                    <span class="legend-value">4.5-5.5</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color-box" style="background-color: #FF6600;"></div>
+                    <span class="legend-label">E+ - Critical</span>
+                    <span class="legend-value">5.5-6.5</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color-box" style="background-color: #FF3300;"></div>
+                    <span class="legend-label">F - Failing</span>
+                    <span class="legend-value">6.5-10</span>
+                  </div>
+                  <div class="legend-item">
+                    <div class="legend-color-box" style="background-color: #CC0000;"></div>
+                    <span class="legend-label">F+ - Critical</span>
+                    <span class="legend-value">10.0+</span>
+                  </div>
+                </div>
+              </div>
               
               <!-- PLOS Chart Section -->
               <div id="plosChartSection" class="plos-chart-section">
@@ -945,6 +1079,7 @@
           plosChartSection.classList.remove('active');
         }
         applyLayerVisibility();
+        updateLegends();
       });
       
       cbVehicles?.addEventListener('change', () => {
@@ -954,6 +1089,7 @@
           plosChartSection.classList.remove('active');
         }
         applyLayerVisibility();
+        updateLegends();
       });
       
       cbPLOS?.addEventListener('change', () => {
@@ -976,15 +1112,50 @@
           rightIndex = 7;
         }
         applyLayerVisibility();
+        updateLegends();
       });
 
       applyLayerVisibility();
+      updateLegends();
       
       // Add popup handlers for all layers
       setupPopupHandlers();
       
       debugLog('Map loaded with MapTiler basemap and Mapbox tileset layers');
     });
+    
+    // Update map legends based on active layer
+    function updateLegends() {
+      const pedestrianLegend = document.getElementById('pedestrianLegend');
+      const vehicleLegend = document.getElementById('vehicleLegend');
+      const plosLegend = document.getElementById('plosLegend');
+      const cbPeds = document.getElementById('cbPeds');
+      const cbVehicles = document.getElementById('cbVehicles');
+      const cbPLOS = document.getElementById('cbPLOS');
+      
+      console.log('updateLegends called');
+      console.log('Pedestrian checked:', cbPeds?.checked);
+      console.log('Vehicle checked:', cbVehicles?.checked);
+      console.log('PLOS checked:', cbPLOS?.checked);
+      console.log('Legend elements:', {pedestrianLegend, vehicleLegend, plosLegend});
+      
+      // Hide all legends
+      if (pedestrianLegend) pedestrianLegend.classList.remove('active');
+      if (vehicleLegend) vehicleLegend.classList.remove('active');
+      if (plosLegend) plosLegend.classList.remove('active');
+      
+      // Show appropriate legend based on active layer
+      if (cbPeds?.checked && pedestrianLegend) {
+        pedestrianLegend.classList.add('active');
+        console.log('Showing pedestrian legend');
+      } else if (cbVehicles?.checked && vehicleLegend) {
+        vehicleLegend.classList.add('active');
+        console.log('Showing vehicle legend');
+      } else if (cbPLOS?.checked && plosLegend) {
+        plosLegend.classList.add('active');
+        console.log('Showing PLOS legend');
+      }
+    }
     
     // Setup popup handlers for all layers
     function setupPopupHandlers() {
@@ -1426,5 +1597,6 @@
     function closeLanding(){ landing.classList.add('hidden'); }
     enterBtn.addEventListener('click', closeLanding);
   </script>
+  
 </body>
 </html>
