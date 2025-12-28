@@ -1650,12 +1650,19 @@
           }
           
           map.loadImage("./assets/info.png", (error, image) => {
-            if (error) return;
-            
-            if (!map.hasImage('info-icon')) {
-              map.addImage('info-icon', image);
+            if (error) {
+              console.error('Error loading POI icon after basemap change:', error);
+              return;
             }
             
+            // CRITICAL: After style change, ALWAYS re-add the icon
+            // (map.setStyle() clears all custom images)
+            if (map.hasImage('info-icon')) {
+              map.removeImage('info-icon');
+            }
+            map.addImage('info-icon', image);
+            
+            // Remove and re-add the POI layer
             if (map.getLayer(POI_LAYER.layerId)) {
               map.removeLayer(POI_LAYER.layerId);
             }
@@ -1672,6 +1679,8 @@
                 'visibility': poiVisibility
               }
             });
+            
+            console.log('✓ POI icon layer rebuilt after basemap change');
           });
           
           // Re-add popup handlers after basemap change
