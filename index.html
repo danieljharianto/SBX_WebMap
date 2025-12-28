@@ -23,7 +23,7 @@
       top: 73px;
       left: 0;
       bottom: 0;
-      width: 350px;
+      width: 420px;
       transition: width .22s ease, transform .22s ease;
       z-index: 10;
     }
@@ -296,15 +296,12 @@
       <div id="brandLogo" class="shrink-0 grid place-items-center h-10 w-10 rounded-lg bg-white text-white font-bold cursor-pointer" title="Collapse/Expand">
         <img src="./assets/MIT.svg" class="mr-[-40px] scale-[1.3] " >
       </div>
-    <!-- <div class="brand-text flex items-center gap-2">
-        <img src="./assets/SA+P.svg" class="h-8 ml-[30px] scale-[0.8] "/>
-      </div> -->
     <div class="brand-text flex items-center gap-3">
         <img src="./assets/SBX.svg" class="h-8 ml-[55px] scale-[1.3] "/>
       </div>
     </div>
     <div class="flex items-center">
-      <img src="./assets/People_S.png" class="h-8 mr-[250px] scale-[1.70]"/>
+      <img src="./assets/People_S.png" class="h-8 mr-[160px] scale-[1.4]"/>
     </div>
   </header>
 
@@ -381,8 +378,8 @@
                 <div class="legend-title">Pedestrian Density</div>
                 <div class="legend-gradient" style="background: linear-gradient(to right, #FFE5D9, #FFCCB3, #FFB399, #FF9980, #FF8066, #FF664D, #FF4D33, #FF3319);"></div>
                 <div class="legend-labels">
-                  <span>Low (0)</span>
-                  <span>High (85+)</span>
+                  <span>Low (&le;1,000)</span>
+                  <span>High (&ge;100,000)</span>
                 </div>
               </div>
               
@@ -391,8 +388,8 @@
                 <div class="legend-title">Vehicle Traffic</div>
                 <div class="legend-gradient" style="background: linear-gradient(to right, #FFE5D9, #FFCCB3, #FFB399, #FF9980, #FF8066, #FF664D, #FF4D33, #FF3319);"></div>
                 <div class="legend-labels">
-                  <span>Low (0)</span>
-                  <span>High (85+)</span>
+                  <span>Low (&le;100)</span>
+                  <span>High (&ge;1,000)</span>
                 </div>
               </div>
               
@@ -422,22 +419,22 @@
                   </div>
                   <div class="legend-item">
                     <div class="legend-color-box" style="background-color: #FF9900;"></div>
-                    <span class="legend-label">E - Very Poor</span>
+                    <span class="legend-label">E+ - Very Poor</span>
                     <span class="legend-value">4.5-5.5</span>
                   </div>
                   <div class="legend-item">
                     <div class="legend-color-box" style="background-color: #FF6600;"></div>
-                    <span class="legend-label">E+ - Critical</span>
+                    <span class="legend-label">E - Critical</span>
                     <span class="legend-value">5.5-6.5</span>
                   </div>
                   <div class="legend-item">
                     <div class="legend-color-box" style="background-color: #FF3300;"></div>
-                    <span class="legend-label">F - Failing</span>
+                    <span class="legend-label">F+ - Failing</span>
                     <span class="legend-value">6.5-10</span>
                   </div>
                   <div class="legend-item">
                     <div class="legend-color-box" style="background-color: #CC0000;"></div>
-                    <span class="legend-label">F+ - Critical</span>
+                    <span class="legend-label">F - Redesign Required</span>
                     <span class="legend-value">10.0+</span>
                   </div>
                 </div>
@@ -673,9 +670,9 @@
     const map = new mapboxgl.Map({
       container: "map",
       style: `https://api.maptiler.com/maps/0199c990-d557-79f4-a316-082733fdc6a6/style.json?key=${MAPTILER_KEY}`,
-      center: [-73.915, 40.805],
+      center: [-73.923, 40.808],
       zoom: 15,
-      pitch: 52,
+      pitch: 50,
       bearing: 8.6,
       attributionControl: false
     });
@@ -708,7 +705,7 @@
           74.250, '#B32400',  // 74.3 - 84.6: Darker red
           84.600, '#991F00'   // 84.6+: Very dark red
         ],
-        'line-width': 10,
+        'line-width': 8,
         'line-opacity': 0.9
       },
       layout: {
@@ -740,7 +737,7 @@
           74.250, '#B32400',  // 74.3 - 84.6: Darker red
           84.600, '#991F00'   // 84.6+: Very dark red
         ],
-        'line-width': 10,
+        'line-width': 8,
         'line-opacity': 0.9
       },
       layout: {
@@ -753,6 +750,14 @@
       key: 'plos',
       tilesetId: 'danielharianto.dq3dkrke',
       sourceLayer: 'pedestrian_plos-cdosep'
+    };
+    
+    // Intervention POI Layer
+    const POI_LAYER = {
+      key: 'poi',
+      tilesetId: 'danielharianto.651musfr',
+      layerId: 'poi-layer',
+      sourceLayer: 'poi_dot-b7x2wy'
     };
     
     // Create 8 separate layers for each PLOS grade
@@ -790,33 +795,33 @@
         max: 4.5
       },
       {
-        key: 'plos-E',
-        layerId: 'plos-layer-E',
-        grade: 'E',
+        key: 'plos-E+',
+        layerId: 'plos-layer-E-plus',
+        grade: 'E+',
         color: '#FF9900',  // Orange
         min: 4.5,
         max: 5.5
       },
       {
-        key: 'plos-E+',
-        layerId: 'plos-layer-E-plus',
-        grade: 'E+',
+        key: 'plos-E',
+        layerId: 'plos-layer-E',
+        grade: 'E',
         color: '#FF6600',  // Orange-Red
         min: 5.5,
         max: 6.5
       },
       {
-        key: 'plos-F',
-        layerId: 'plos-layer-F',
-        grade: 'F',
+        key: 'plos-F+',
+        layerId: 'plos-layer-F-plus',
+        grade: 'F+',
         color: '#FF3300',  // Red
         min: 6.5,
         max: 10.0
       },
       {
-        key: 'plos-F+',
-        layerId: 'plos-layer-F-plus',
-        grade: 'F+',
+        key: 'plos-F',
+        layerId: 'plos-layer-F',
+        grade: 'F',
         color: '#CC0000',  // Dark Red
         min: 10.0,
         max: 100
@@ -843,10 +848,10 @@
       { grade: 'B', min: 1.5, max: 2.5, color: '#77CC00', label: 'B' },
       { grade: 'C', min: 2.5, max: 3.5, color: '#CCCC00', label: 'C' },
       { grade: 'D', min: 3.5, max: 4.5, color: '#FFCC00', label: 'D' },
-      { grade: 'E', min: 4.5, max: 5.5, color: '#FF9900', label: 'E' },
-      { grade: 'E+', min: 5.5, max: 6.5, color: '#FF6600', label: 'E+' },
-      { grade: 'F', min: 6.5, max: 10.0, color: '#FF3300', label: 'F' },
-      { grade: 'F+', min: 10.0, max: 100, color: '#CC0000', label: 'F+' }
+      { grade: 'E+', min: 4.5, max: 5.5, color: '#FF9900', label: 'E+' },
+      { grade: 'E', min: 5.5, max: 6.5, color: '#FF6600', label: 'E' },
+      { grade: 'F+', min: 6.5, max: 10.0, color: '#FF3300', label: 'F+' },
+      { grade: 'F', min: 10.0, max: 100, color: '#CC0000', label: 'F' }
     ];
     
     // Calculate PLOS data from map features
@@ -1065,7 +1070,7 @@
           ],
           paint: {
             'line-color': gradeLayer.color,
-            'line-width': 10,
+            'line-width': 8,
             'line-opacity': 0.9
           },
           layout: {
@@ -1076,6 +1081,45 @@
         });
         
         console.log('Added PLOS layer:', gradeLayer.layerId, 'for grade', gradeLayer.grade);
+      });
+
+      // Add POI intervention points layer with SVG icon
+      if (!map.getSource('poi-source')) {
+        map.addSource('poi-source', {
+          type: 'vector',
+          url: `mapbox://${POI_LAYER.tilesetId}`
+        });
+      }
+      
+      // Load info.svg icon
+      map.loadImage("./assets/info.png", (error, image) => {
+        if (error) {
+          console.error('Error loading info icon:', error);
+          return;
+        }
+        
+        if (!map.hasImage('info-icon')) {
+          map.addImage('info-icon', image);
+        }
+        
+        if (map.getLayer(POI_LAYER.layerId)) {
+          map.removeLayer(POI_LAYER.layerId);
+        }
+        
+        map.addLayer({
+          id: POI_LAYER.layerId,
+          type: 'symbol',
+          source: 'poi-source',
+          'source-layer': POI_LAYER.sourceLayer,
+          layout: {
+            'icon-image': 'info-icon',
+            'icon-size': 1.0,
+            'icon-allow-overlap': true,
+            'visibility': 'none'
+          }
+        });
+        
+        console.log('Added POI icon layer:', POI_LAYER.layerId);
       });
 
       // Wire checkboxes to layer visibility
@@ -1401,20 +1445,20 @@
           adequacy = 'Poor - Inadequate';
           gradeColor = '#FFCC00';
         } else if (plosValue < 5.5) {
-          losGrade = 'E';
+          losGrade = 'E+';
           adequacy = 'Very Poor - Inadequate';
           gradeColor = '#FF9900';
         } else if (plosValue < 6.5) {
-          losGrade = 'E+';
+          losGrade = 'E';
           adequacy = 'Critical - Inadequate';
           gradeColor = '#FF6600';
         } else if (plosValue < 10.0) {
-          losGrade = 'F';
+          losGrade = 'F+';
           adequacy = 'Failing - Severely Inadequate';
           gradeColor = '#FF3300';
         } else {
-          losGrade = 'F+';
-          adequacy = 'Critical Failure - Severely Inadequate';
+          losGrade = 'F';
+          adequacy = 'Severely Inadequate - Unsafe';
           gradeColor = '#CC0000';
         }
         
@@ -1542,6 +1586,13 @@
           }
         });
         
+        // Save POI layer visibility state
+        let poiVisibility = 'none';
+        const poiLayer = map.getLayer(POI_LAYER.layerId);
+        if (poiLayer) {
+          poiVisibility = map.getLayoutProperty(POI_LAYER.layerId, 'visibility') || 'none';
+        }
+        
         map.setStyle(style);
         
         map.once('styledata', () => {
@@ -1578,7 +1629,7 @@
               ],
               paint: {
                 'line-color': gradeLayer.color,
-                'line-width': 10,
+                'line-width': 8,
                 'line-opacity': 0.9
               },
               layout: {
@@ -1589,10 +1640,43 @@
             });
           });
           
+          // Rebuild POI layer with icon
+          if (!map.getSource('poi-source')) {
+            map.addSource('poi-source', {
+              type: 'vector',
+              url: `mapbox://${POI_LAYER.tilesetId}`
+            });
+          }
+          
+          map.loadImage("./assets/info.png", (error, image) => {
+            if (error) return;
+            
+            if (!map.hasImage('info-icon')) {
+              map.addImage('info-icon', image);
+            }
+            
+            if (map.getLayer(POI_LAYER.layerId)) {
+              map.removeLayer(POI_LAYER.layerId);
+            }
+            
+            map.addLayer({
+              id: POI_LAYER.layerId,
+              type: 'symbol',
+              source: 'poi-source',
+              'source-layer': POI_LAYER.sourceLayer,
+              layout: {
+                'icon-image': 'info-icon',
+                'icon-size': 1.0,
+                'icon-allow-overlap': true,
+                'visibility': poiVisibility
+              }
+            });
+          });
+          
           // Re-add popup handlers after basemap change
           setTimeout(() => setupPopupHandlers(), 200);
           
-          debugLog('Rebuilt PLOS layers after basemap change');
+          debugLog('Rebuilt PLOS and POI layers after basemap change');
         });
         
         bmPanel.querySelectorAll("button").forEach(b => b.classList.remove("ring", "ring-blue-500"));
@@ -1611,11 +1695,26 @@
   </script>
 
   <script>
-    // Priority Locations Data
+    // Priority Locations Data - UPDATED WITH NEW IMAGE PATHS
     const PRIORITY_LOCATIONS = {
       'lincoln-ave': {
         name: 'Lincoln Avenue',
         description: 'Major north-south corridor with high pedestrian activity and mixed traffic conditions.',
+        camera: {
+          center: [-73.929, 40.810],
+          zoom: 17,
+          pitch: 45,
+          bearing: -10
+        },
+        nodes: [
+          {
+            id: 'lincoln-node-1',
+            coordinates: [-73.9290, 40.8095],
+            title: 'Lincoln Avenue Corridor Improvements',
+            description: 'Comprehensive pedestrian safety enhancements including sidewalk widening, protected bike lanes, and improved lighting along this major north-south corridor.',
+            image: './assets/interventions/01_TOS.png'
+          }
+        ],
         interventions: [
           'Widen sidewalks to accommodate high pedestrian volumes',
           'Install protected bike lanes to separate cyclists from vehicular traffic',
@@ -1632,6 +1731,21 @@
       '138-st': {
         name: '138th Street',
         description: 'Key east-west connector with transit hub and commercial activity.',
+        camera: {
+          center: [-73.92415, 40.80987],
+          zoom: 17,
+          pitch: 45,
+          bearing: 100
+        },
+        nodes: [
+          {
+            id: '138-node-1',
+            coordinates: [-73.9240, 40.8100],
+            title: '138th Street Transit Hub Enhancement',
+            description: 'Pedestrian-focused improvements including high-visibility crosswalks, curb extensions, and a new pedestrian plaza at the subway station entrance.',
+            image: './assets/interventions/02_TRE.png'
+          }
+        ],
         interventions: [
           'Redesign crosswalks with high-visibility markings and countdown timers',
           'Implement curb extensions (bulb-outs) at key intersections',
@@ -1648,6 +1762,21 @@
       '134-st': {
         name: '134th Street',
         description: 'Residential corridor requiring traffic calming and safety improvements.',
+        camera: {
+          center: [-73.92671, 40.80728],
+          zoom: 17,
+          pitch: 45,
+          bearing: 160
+        },
+        nodes: [
+          {
+            id: '134-node-1',
+            coordinates: [-73.9268, 40.8073],
+            title: '134th Street Traffic Calming Zone',
+            description: 'Comprehensive traffic calming measures including 20 mph slow zones, speed cushions, and enhanced pedestrian crossings for residential safety.',
+            image: './assets/interventions/03_TCO.png'
+          }
+        ],
         interventions: [
           'Implement 20 mph slow zones in residential blocks',
           'Install speed cushions to reduce vehicle speeds',
@@ -1664,6 +1793,21 @@
       'bruckner-blvd': {
         name: 'Bruckner Boulevard',
         description: 'High-speed arterial requiring pedestrian safety enhancements and crossing improvements.',
+        camera: {
+          center: [-73.92077, 40.80414],
+          zoom: 17,
+          pitch: 45,
+          bearing: 90
+        },
+        nodes: [
+          {
+            id: 'bruckner-node-1',
+            coordinates: [-73.9208, 40.8040],
+            title: 'Bruckner Boulevard Safety Corridor',
+            description: 'Major pedestrian safety enhancements including protected crossings, lane reductions, and median refuge areas to improve safety on this high-speed arterial.',
+            image: './assets/interventions/04_TIS.png'
+          }
+        ],
         interventions: [
           'Install pedestrian overpasses or underpasses at key locations',
           'Reduce number of traffic lanes and narrow lane widths',
@@ -1680,6 +1824,21 @@
       'e133-st': {
         name: 'E 133rd Street',
         description: 'Mixed-use corridor with connectivity gaps and pedestrian infrastructure needs.',
+        camera: {
+          center: [-73.91538, 40.80180],
+          zoom: 17,
+          pitch: 45,
+          bearing: 100
+        },
+        nodes: [
+          {
+            id: 'e133-node-1',
+            coordinates: [-73.9152, 40.8020],
+            title: 'E 133rd Street Infrastructure Repair',
+            description: 'Essential pedestrian infrastructure improvements including sidewalk gap repairs, ADA-compliant ramps, and street amenities for better connectivity.',
+            image: './assets/interventions/01_TOS.png'
+          }
+        ],
         interventions: [
           'Fill sidewalk gaps and repair damaged pavement',
           'Install ADA-compliant curb ramps at all intersections',
@@ -1696,6 +1855,21 @@
       '132nd-st': {
         name: '132nd Street',
         description: 'Emerging corridor with potential for pedestrian-oriented redevelopment.',
+        camera: {
+          center: [-73.92126, 40.80311],
+          zoom: 17,
+          pitch: 45,
+          bearing: 160
+        },
+        nodes: [
+          {
+            id: '132-node-1',
+            coordinates: [-73.9213, 40.8030],
+            title: '132nd Street Pedestrian Zone',
+            description: 'Transformation into a pedestrian-oriented corridor with shared streets, parklets, and enhanced streetscape amenities to support active ground-floor uses.',
+            image: './assets/interventions/02_TRE.png'
+          }
+        ],
         interventions: [
           'Create shared streets with pedestrian priority zones',
           'Install decorative paving and street furniture',
@@ -1720,11 +1894,159 @@
     const interventionsList = document.getElementById('interventionsList');
     const strategiesList = document.getElementById('strategiesList');
 
+
+    // Function to show/hide POI intervention layer
+    function togglePOILayer(visible) {
+      if (map.getLayer(POI_LAYER.layerId)) {
+        map.setLayoutProperty(POI_LAYER.layerId, 'visibility', visible ? 'visible' : 'none');
+        console.log('POI layer visibility:', visible ? 'visible' : 'hidden');
+      }
+    }
+
+    // Add click handler for POI points (after map loads)
+    map.on('load', () => {
+      // Change cursor on hover
+      map.on('mouseenter', POI_LAYER.layerId, () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', POI_LAYER.layerId, () => {
+        map.getCanvas().style.cursor = '';
+      });
+
+      // Click handler for POI points - UPDATED WITH RIGHT POSITION AND INTEGER PERCENTAGES
+      map.on('click', POI_LAYER.layerId, (e) => {
+        const feature = e.features[0];
+        const props = feature.properties;
+        const coordinates = e.lngLat;
+        
+        // Get location info from current selection
+        const selectedValue = priorityLocationSelect?.value;
+        let locationInfo = null;
+        
+        if (selectedValue && PRIORITY_LOCATIONS[selectedValue]) {
+          const location = PRIORITY_LOCATIONS[selectedValue];
+          // Use first node info as template
+          if (location.nodes && location.nodes.length > 0) {
+            locationInfo = location.nodes[0];
+          }
+        }
+        
+        // Extract data from properties
+        const cConnect = props.C_Connect || 0;
+        const cRegen = props.C_Regen || 0;
+        const cGreen = props.C_Green || 0;
+        const uConnect = props.U_Connect || 0;
+        const uRegen = props.U_Regen || 0;
+        const uGreen = props.U_Green || 0;
+        
+        // Create popup - UPDATED: anchor left (appears on RIGHT), integer percentages
+        new mapboxgl.Popup({
+          anchor: 'left',
+          offset: 55,
+          maxWidth: '480px'
+        })
+        .setLngLat(coordinates)
+        .setHTML(`
+          <div style="padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;">
+            ${locationInfo ? `
+              <img 
+                src="${locationInfo.image}" 
+                alt="${locationInfo.title}"
+                style="width: 100%; height: 300px; object-fit: contain; border-radius: 8px 8px 0 0; background: #f8f8f8;"
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
+              />
+
+              <div style="padding: 16px;">
+                <strong style="font-size: 14px; color: #1a1a1a; display: block; margin-bottom: 8px;">${locationInfo.title}</strong>
+                <p style="font-size: 12px; color: #666; line-height: 1.6; margin: 0 0 12px 0;">${locationInfo.description}</p>
+                
+                <!-- Data Grid -->
+                <div style="background: #f8f9fa; border-radius: 6px; padding: 8px 10px; margin-top: 6px;">
+                  <div style="font-size: 11px; font-weight: 600; color: #555; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Metrics</div>
+                  
+                  <!-- Connectivity Row -->
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; margin-bottom: 6px; border-bottom: 1px solid #e0e0e0;">
+                    <span style="font-size: 11px; color: #666; flex: 1;">Connectivity</span>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                      <div style="text-align: center;">
+                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Current</div>
+                        <strong style="font-size: 13px; color: #1a1a1a;">${Math.round(cConnect)}%</strong>
+                      </div>
+                      <div style="text-align: center;">
+                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Potential</div>
+                        <strong style="font-size: 13px; color: #00308F;">${Math.round(uConnect)}%</strong>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Plot Potential Row -->
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                    <span style="font-size: 11px; color: #666; flex: 1;">Plot Potential</span>
+                    <div style="display: flex; gap: 16px; align-items: center;">
+                      <div style="text-align: center;">
+                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Current</div>
+                        <strong style="font-size: 13px; color: #1a1a1a;">${Math.round(cRegen)}%</strong>
+                      </div>
+                      <div style="text-align: center;">
+                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Potential</div>
+                        <strong style="font-size: 13px; color: #00308F;">${Math.round(uRegen)}%</strong>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Greens Row -->
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                    <span style="font-size: 11px; color: #666; flex: 1;">Greens</span>
+                    <div style="display: flex; gap: 16px; align-items: center;">
+                      <div style="text-align: center;">
+                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Current</div>
+                        <strong style="font-size: 13px; color: #1a1a1a;">${Math.round(cGreen)}%</strong>
+                      </div>
+                      <div style="text-align: center;">
+                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Potential</div>
+                        <strong style="font-size: 13px; color: #00308F;">${Math.round(uGreen)}%</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ` : `
+              <div style="padding: 12px;">
+                <strong style="font-size: 13px; color: #1a1a1a; display: block; margin-bottom: 6px;">Intervention Point</strong>
+                <p style="font-size: 11px; color: #666; line-height: 1.5; margin: 0;">Click a location from the dropdown to see intervention details.</p>
+              </div>
+            `}
+          </div>
+        `)
+        .addTo(map);
+        
+        console.log('Clicked POI point at:', coordinates);
+        console.log('Data - Connectivity:', cConnect, '→', uConnect, '| Plot:', cRegen, '→', uRegen, '| Green:', cGreen, '→', uGreen);
+      });
+    });
+
     priorityLocationSelect?.addEventListener('change', (e) => {
       const selectedValue = e.target.value;
       
       if (selectedValue && PRIORITY_LOCATIONS[selectedValue]) {
         const location = PRIORITY_LOCATIONS[selectedValue];
+        
+        // Fly to the location on the map with smooth animation
+        if (location.camera) {
+          map.flyTo({
+            center: location.camera.center,
+            zoom: location.camera.zoom,
+            pitch: location.camera.pitch,
+            bearing: location.camera.bearing,
+            duration: 2000,
+            essential: true
+          });
+        }
+        
+        // Show POI layer after camera settles
+        setTimeout(() => {
+          togglePOILayer(true);
+        }, 2200);
         
         // Update location details
         locationName.textContent = location.name;
@@ -1751,7 +2073,11 @@
         defaultMessage.classList.add('hidden');
         
         console.log('Selected priority location:', location.name);
+        console.log('Flying to:', location.camera);
       } else {
+        // Hide POI layer when no location selected
+        togglePOILayer(false);
+        
         // Hide details, show default message
         locationDetails.classList.add('hidden');
         defaultMessage.classList.remove('hidden');
@@ -1810,7 +2136,7 @@
       </div>
       
       <div class="flex items-center gap-2">
-        <button id="enterBtn" class="inline-flex items-center justify-center rounded-lg bg-black text-white px-4 py-2 font-medium hover:bg-black/90">Enter</button>
+        <button id="enterBtn" class="inline-flex items-center justify-center rounded-lg bg-black text-white w-[min(92vw,580px)] px-4 py-2 font-medium hover:bg-black/90">Enter</button>
       </div>
     </div>
   </div>
