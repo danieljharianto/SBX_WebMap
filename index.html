@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/png" href="./assets/logo.png">
   <title>South Bronx Studio</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -301,7 +302,7 @@
       </div>
     </div>
     <div class="flex items-center">
-      <img src="./assets/People_S.png" class="h-8 mr-[160px] scale-[1.4]"/>
+      <img src="./assets/People_S.png" class="h-8 mr-[175px] scale-[1.4]"/>
     </div>
   </header>
 
@@ -376,7 +377,7 @@
               <!-- Pedestrian Density Legend -->
               <div id="pedestrianLegend" class="map-legend">
                 <div class="legend-title">Pedestrian Density</div>
-                <div class="legend-gradient" style="background: linear-gradient(to right, #FFE5D9, #FFCCB3, #FFB399, #FF9980, #FF8066, #FF664D, #FF4D33, #FF3319);"></div>
+                <div class="legend-gradient" style="background: linear-gradient(to right,  #FFB399, #FF9980, #FF8066, #FF664D, #FF4D33, #FF3319,#CC2900, #B32400, #991F00);"></div>
                 <div class="legend-labels">
                   <span>Low (&le;1,000)</span>
                   <span>High (&ge;100,000)</span>
@@ -386,7 +387,7 @@
               <!-- Vehicle Traffic Legend -->
               <div id="vehicleLegend" class="map-legend">
                 <div class="legend-title">Vehicle Traffic</div>
-                <div class="legend-gradient" style="background: linear-gradient(to right, #FFE5D9, #FFCCB3, #FFB399, #FF9980, #FF8066, #FF664D, #FF4D33, #FF3319);"></div>
+                <div class="legend-gradient" style="background: linear-gradient(to right,  #FFB399, #FF9980, #FF8066, #FF664D, #FF4D33, #FF3319,#CC2900, #B32400, #991F00);"></div>
                 <div class="legend-labels">
                   <span>Low (&le;100)</span>
                   <span>High (&ge;1,000)</span>
@@ -1113,7 +1114,7 @@
           'source-layer': POI_LAYER.sourceLayer,
           layout: {
             'icon-image': 'info-icon',
-            'icon-size': 1.0,
+            'icon-size': 0.3,
             'icon-allow-overlap': true,
             'visibility': 'none'
           }
@@ -1666,7 +1667,7 @@
               'source-layer': POI_LAYER.sourceLayer,
               layout: {
                 'icon-image': 'info-icon',
-                'icon-size': 1.0,
+                'icon-size': 0.3,
                 'icon-allow-overlap': true,
                 'visibility': poiVisibility
               }
@@ -1706,6 +1707,8 @@
           pitch: 45,
           bearing: -10
         },
+        // Node IDs that belong to this location (matched by Name field)
+        nodeNames: ['Lincoln Ave'],
         nodes: [
           {
             id: 'lincoln-node-1',
@@ -1737,13 +1740,14 @@
           pitch: 45,
           bearing: 100
         },
+        nodeNames: ['E 138th St'],
         nodes: [
           {
             id: '138-node-1',
             coordinates: [-73.9240, 40.8100],
             title: '138th Street Transit Hub Enhancement',
             description: 'Pedestrian-focused improvements including high-visibility crosswalks, curb extensions, and a new pedestrian plaza at the subway station entrance.',
-            image: './assets/interventions/02_TRE.png'
+            image: './assets/interventions/01_TOS.png'
           }
         ],
         interventions: [
@@ -1768,6 +1772,7 @@
           pitch: 45,
           bearing: 160
         },
+        nodeNames: ['E 134th St'],
         nodes: [
           {
             id: '134-node-1',
@@ -1799,13 +1804,14 @@
           pitch: 45,
           bearing: 90
         },
+        nodeNames: ['Bruckner Blvd'],
         nodes: [
           {
             id: 'bruckner-node-1',
             coordinates: [-73.9208, 40.8040],
             title: 'Bruckner Boulevard Safety Corridor',
             description: 'Major pedestrian safety enhancements including protected crossings, lane reductions, and median refuge areas to improve safety on this high-speed arterial.',
-            image: './assets/interventions/04_TIS.png'
+            image: './assets/interventions/03_TCO.png'
           }
         ],
         interventions: [
@@ -1830,13 +1836,14 @@
           pitch: 45,
           bearing: 100
         },
+        nodeNames: ['E 133rd St'],
         nodes: [
           {
             id: 'e133-node-1',
             coordinates: [-73.9152, 40.8020],
             title: 'E 133rd Street Infrastructure Repair',
             description: 'Essential pedestrian infrastructure improvements including sidewalk gap repairs, ADA-compliant ramps, and street amenities for better connectivity.',
-            image: './assets/interventions/01_TOS.png'
+            image: './assets/interventions/04_TIS.png'
           }
         ],
         interventions: [
@@ -1861,13 +1868,14 @@
           pitch: 45,
           bearing: 160
         },
+        nodeNames: ['E 132nd St'],
         nodes: [
           {
             id: '132-node-1',
             coordinates: [-73.9213, 40.8030],
             title: '132nd Street Pedestrian Zone',
             description: 'Transformation into a pedestrian-oriented corridor with shared streets, parklets, and enhanced streetscape amenities to support active ground-floor uses.',
-            image: './assets/interventions/02_TRE.png'
+            image: './assets/interventions/04_TIS.png'
           }
         ],
         interventions: [
@@ -1894,12 +1902,74 @@
     const interventionsList = document.getElementById('interventionsList');
     const strategiesList = document.getElementById('strategiesList');
 
+    // Variable to track current selected location
+    let currentSelectedLocation = null;
+
+    // Function to filter POI layer based on selected location
+    function filterPOILayer(locationKey) {
+      if (!map.getLayer(POI_LAYER.layerId)) {
+        console.log('POI layer not found!');
+        return;
+      }
+      
+      if (!locationKey || !PRIORITY_LOCATIONS[locationKey]) {
+        // Hide all POIs
+        map.setFilter(POI_LAYER.layerId, ['==', 'Name', '']);
+        console.log('Hiding all POI points');
+        return;
+      }
+      
+      const location = PRIORITY_LOCATIONS[locationKey];
+      const nodeNames = location.nodeNames || [];
+      
+      // DEBUG: Temporarily show ALL POIs to verify they're visible
+      console.log('DEBUG: Removing filter to show ALL POI points');
+      map.setFilter(POI_LAYER.layerId, null);
+      
+      // List all POI features to see their Name values
+      setTimeout(() => {
+        const features = map.querySourceFeatures('poi-source', {
+          sourceLayer: POI_LAYER.sourceLayer
+        });
+        console.log('=== ALL POI FEATURES ===');
+        console.log('Total POI features:', features.length);
+        features.forEach((f, i) => {
+          console.log(`POI ${i + 1}: Name="${f.properties.Name}"`);
+        });
+        console.log('======================');
+      }, 500);
+      
+      /* ORIGINAL FILTERING CODE - COMMENTED OUT FOR DEBUG
+      if (nodeNames.length === 0) {
+        // No nodes specified, hide all
+        map.setFilter(POI_LAYER.layerId, ['==', 'Name', '']);
+        console.log('No node names specified, hiding all POI points');
+      } else if (nodeNames.length === 1) {
+        // Single node name filter
+        map.setFilter(POI_LAYER.layerId, ['==', 'Name', nodeNames[0]]);
+        console.log('Filtering POI to show only:', nodeNames[0]);
+      } else {
+        // Multiple node names filter using 'in' operator
+        map.setFilter(POI_LAYER.layerId, ['in', 'Name', ...nodeNames]);
+        console.log('Filtering POI to show:', nodeNames);
+      }
+      */
+    }
 
     // Function to show/hide POI intervention layer
     function togglePOILayer(visible) {
+      console.log('togglePOILayer called with visible =', visible);
+      
       if (map.getLayer(POI_LAYER.layerId)) {
+        const currentVisibility = map.getLayoutProperty(POI_LAYER.layerId, 'visibility');
+        console.log('Current POI layer visibility:', currentVisibility);
+        
         map.setLayoutProperty(POI_LAYER.layerId, 'visibility', visible ? 'visible' : 'none');
-        console.log('POI layer visibility:', visible ? 'visible' : 'hidden');
+        
+        const newVisibility = map.getLayoutProperty(POI_LAYER.layerId, 'visibility');
+        console.log('New POI layer visibility:', newVisibility);
+      } else {
+        console.log('ERROR: POI layer not found!');
       }
     }
 
@@ -1913,25 +1983,32 @@
         map.getCanvas().style.cursor = '';
       });
 
-      // Click handler for POI points - UPDATED WITH RIGHT POSITION AND INTEGER PERCENTAGES
+      // Click handler for POI points - FIXED: Use Name field from feature properties
       map.on('click', POI_LAYER.layerId, (e) => {
         const feature = e.features[0];
         const props = feature.properties;
         const coordinates = e.lngLat;
         
-        // Get location info from current selection
-        const selectedValue = priorityLocationSelect?.value;
+        // DEBUG: Log the exact Name value
+        console.log('=== POI CLICKED ===');
+        console.log('Name field value:', props.Name);
+        console.log('All properties:', props);
+        console.log('==================');
+        
+        // Get location info from current selection for image and description
+        const selectedValue = currentSelectedLocation;
         let locationInfo = null;
         
         if (selectedValue && PRIORITY_LOCATIONS[selectedValue]) {
           const location = PRIORITY_LOCATIONS[selectedValue];
-          // Use first node info as template
+          // Use first node info as template for image and description
           if (location.nodes && location.nodes.length > 0) {
             locationInfo = location.nodes[0];
           }
         }
         
         // Extract data from properties
+        const streetName = props.Name || 'Intervention Point';  // FIX: Use Name field from properties
         const cConnect = props.C_Connect || 0;
         const cRegen = props.C_Regen || 0;
         const cGreen = props.C_Green || 0;
@@ -1939,11 +2016,11 @@
         const uRegen = props.U_Regen || 0;
         const uGreen = props.U_Green || 0;
         
-        // Create popup - UPDATED: anchor left (appears on RIGHT), integer percentages
+        // Create popup - FIXED: Use streetName from Name field
         new mapboxgl.Popup({
           anchor: 'left',
           offset: 55,
-          maxWidth: '480px'
+          maxWidth: '400px'
         })
         .setLngLat(coordinates)
         .setHTML(`
@@ -1951,13 +2028,13 @@
             ${locationInfo ? `
               <img 
                 src="${locationInfo.image}" 
-                alt="${locationInfo.title}"
+                alt="${streetName}"
                 style="width: 100%; height: 300px; object-fit: contain; border-radius: 8px 8px 0 0; background: #f8f8f8;"
                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
               />
 
-              <div style="padding: 16px;">
-                <strong style="font-size: 14px; color: #1a1a1a; display: block; margin-bottom: 8px;">${locationInfo.title}</strong>
+              <div style="padding: 12px;">
+                <strong style="font-size: 14px; color: #1a1a1a; display: block; margin-bottom: 8px;">${streetName}</strong>
                 <p style="font-size: 12px; color: #666; line-height: 1.6; margin: 0 0 12px 0;">${locationInfo.description}</p>
                 
                 <!-- Data Grid -->
@@ -1969,41 +2046,41 @@
                     <span style="font-size: 11px; color: #666; flex: 1;">Connectivity</span>
                     <div style="display: flex; gap: 10px; align-items: center;">
                       <div style="text-align: center;">
-                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Current</div>
+                        <div style="font-size: 9px; color: #999; margin-bottom: 1px;">Current</div>
                         <strong style="font-size: 13px; color: #1a1a1a;">${Math.round(cConnect)}%</strong>
                       </div>
                       <div style="text-align: center;">
-                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Potential</div>
+                        <div style="font-size: 9px; color: #999; margin-bottom: 1px;">Potential</div>
                         <strong style="font-size: 13px; color: #00308F;">${Math.round(uConnect)}%</strong>
                       </div>
                     </div>
                   </div>
                   
                   <!-- Plot Potential Row -->
-                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e0e0e0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #e0e0e0;">
                     <span style="font-size: 11px; color: #666; flex: 1;">Plot Potential</span>
                     <div style="display: flex; gap: 16px; align-items: center;">
                       <div style="text-align: center;">
-                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Current</div>
+                        <div style="font-size: 9px; color: #999; margin-bottom: 1px;">Current</div>
                         <strong style="font-size: 13px; color: #1a1a1a;">${Math.round(cRegen)}%</strong>
                       </div>
                       <div style="text-align: center;">
-                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Potential</div>
+                        <div style="font-size: 9px; color: #999; margin-bottom: 1px;">Potential</div>
                         <strong style="font-size: 13px; color: #00308F;">${Math.round(uRegen)}%</strong>
                       </div>
                     </div>
                   </div>
                   
                   <!-- Greens Row -->
-                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0;">
+                  <div style="display: flex; justify-content: space-between; align-items: center; padding: 6px 0;">
                     <span style="font-size: 11px; color: #666; flex: 1;">Greens</span>
                     <div style="display: flex; gap: 16px; align-items: center;">
                       <div style="text-align: center;">
-                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Current</div>
+                        <div style="font-size: 9px; color: #999; margin-bottom: 1px;">Current</div>
                         <strong style="font-size: 13px; color: #1a1a1a;">${Math.round(cGreen)}%</strong>
                       </div>
                       <div style="text-align: center;">
-                        <div style="font-size: 9px; color: #999; margin-bottom: 2px;">Potential</div>
+                        <div style="font-size: 9px; color: #999; margin-bottom: 1px;">Potential</div>
                         <strong style="font-size: 13px; color: #00308F;">${Math.round(uGreen)}%</strong>
                       </div>
                     </div>
@@ -2012,7 +2089,7 @@
               </div>
             ` : `
               <div style="padding: 12px;">
-                <strong style="font-size: 13px; color: #1a1a1a; display: block; margin-bottom: 6px;">Intervention Point</strong>
+                <strong style="font-size: 13px; color: #1a1a1a; display: block; margin-bottom: 6px;">${streetName}</strong>
                 <p style="font-size: 11px; color: #666; line-height: 1.5; margin: 0;">Click a location from the dropdown to see intervention details.</p>
               </div>
             `}
@@ -2020,16 +2097,23 @@
         `)
         .addTo(map);
         
-        console.log('Clicked POI point at:', coordinates);
+        console.log('Clicked POI point:', streetName);
         console.log('Data - Connectivity:', cConnect, '→', uConnect, '| Plot:', cRegen, '→', uRegen, '| Green:', cGreen, '→', uGreen);
       });
     });
 
     priorityLocationSelect?.addEventListener('change', (e) => {
       const selectedValue = e.target.value;
+      currentSelectedLocation = selectedValue;
+      
+      console.log('=== LOCATION SELECTED ===');
+      console.log('Selected:', selectedValue);
       
       if (selectedValue && PRIORITY_LOCATIONS[selectedValue]) {
         const location = PRIORITY_LOCATIONS[selectedValue];
+        
+        console.log('Location data:', location);
+        console.log('Camera settings:', location.camera);
         
         // Fly to the location on the map with smooth animation
         if (location.camera) {
@@ -2043,9 +2127,13 @@
           });
         }
         
-        // Show POI layer after camera settles
+        // Show POI layer and apply filter after camera settles
+        console.log('Setting timeout for POI layer...');
         setTimeout(() => {
+          console.log('Showing POI layer...');
           togglePOILayer(true);
+          console.log('Applying filter...');
+          filterPOILayer(selectedValue);
         }, 2200);
         
         // Update location details
@@ -2072,15 +2160,18 @@
         locationDetails.classList.remove('hidden');
         defaultMessage.classList.add('hidden');
         
-        console.log('Selected priority location:', location.name);
-        console.log('Flying to:', location.camera);
+        console.log('Details updated');
+        console.log('========================');
       } else {
+        console.log('No location selected, hiding POI layer');
         // Hide POI layer when no location selected
         togglePOILayer(false);
+        filterPOILayer(null);
         
         // Hide details, show default message
         locationDetails.classList.add('hidden');
         defaultMessage.classList.remove('hidden');
+        console.log('========================');
       }
     });
   </script>
