@@ -19,6 +19,14 @@
       z-index: 0 !important;
     }
     
+    /* Mobile: adjust map top to account for smaller header */
+    @media (max-width: 767px) {
+      #map {
+        top: 60px !important;
+        height: calc(100vh - 60px) !important;
+      }
+    }
+    
     .sidebar{
       position: fixed;
       top: 73px;
@@ -27,7 +35,9 @@
       width: 420px;
       transition: width .22s ease, transform .22s ease;
       z-index: 10;
+      background: white;
     }
+    
     .sidebar.collapsed{
       width: 96px;
     }
@@ -72,12 +82,96 @@
       border: none !important;
     }
     
+    /* Mobile-specific styles */
     @media (max-width: 767px){
-      .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:40;transform:translateX(-100%)}
-      .sidebar.open{transform:translateX(0)}
-      .backdrop{position:fixed;inset:0;background:rgba(0,0,0,.35);backdrop-filter:saturate(120%) blur(2px);z-index:30;display:none}
-      .backdrop.show{display:block}
+      .sidebar{
+        position:fixed;
+        left:0;
+        top: 60px;
+        bottom:0;
+        width: 85vw;
+        max-width: 360px;
+        z-index:40;
+        transform:translateX(-100%);
+        box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+      }
+      .sidebar.open{
+        transform:translateX(0);
+      }
+      .sidebar.collapsed {
+        transform:translateX(-100%);
+      }
+      .backdrop{
+        position:fixed;
+        inset:0;
+        background:rgba(0,0,0,.35);
+        backdrop-filter:saturate(120%) blur(2px);
+        z-index:30;
+        display:none;
+      }
+      .backdrop.show{
+        display:block;
+      }
+      
+      /* Hide expand bar on mobile */
+      .expand-bar {
+        display: none;
+      }
+      
+      /* Mobile header adjustments */
+      header {
+        padding: 12px 16px !important;
+        height: 60px;
+      }
+      
+      header img {
+        height: 24px !important;
+      }
+      
+      /* Make rail buttons touch-friendly on mobile */
+      .rail-btn {
+        width: 48px !important;
+        height: 48px !important;
+        min-width: 48px !important;
+      }
+      
+      .rail-btn img {
+        width: 28px !important;
+        height: 28px !important;
+      }
+      
+      /* Mobile typography */
+      .sidebar .panel {
+        padding: 16px !important;
+        font-size: 13px;
+      }
+      
+      .sidebar h2 {
+        font-size: 15px !important;
+      }
+      
+      .sidebar h3 {
+        font-size: 13px !important;
+      }
+      
+      .sidebar p, .sidebar li {
+        font-size: 12px !important;
+        line-height: 1.6 !important;
+      }
+      
+      /* Mobile select dropdown */
+      #priorityLocationSelect {
+        font-size: 13px !important;
+        padding: 10px 12px !important;
+      }
+      
+      /* Mobile checkbox styling */
+      input[type="checkbox"] {
+        width: 18px !important;
+        height: 18px !important;
+      }
     }
+    
     .debug-panel{
       display: none !important;
       position:fixed;left:8px;bottom:8px;z-index:9999;
@@ -94,6 +188,13 @@
       overflow-y: auto;
       margin-bottom: 20px;
     }
+    
+    @media (max-width: 767px) {
+      .disclaimer__content {
+        max-height: 60vh;
+      }
+    }
+    
     .disclaimer__item{
       margin-bottom: 16px;
     }
@@ -286,23 +387,89 @@
       font-size: 9px;
       margin-left: auto;
     }
+    
+    /* Mobile menu button */
+    .mobile-menu-btn {
+      display: none;
+      position: fixed;
+      top: 12px;
+      left: 16px;
+      z-index: 50;
+      width: 40px;
+      height: 40px;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      cursor: pointer;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    @media (max-width: 767px) {
+      .mobile-menu-btn {
+        display: flex;
+      }
+    }
+    
+    .hamburger {
+      width: 20px;
+      height: 14px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .hamburger span {
+      display: block;
+      height: 2px;
+      width: 100%;
+      background: #374151;
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    
+    .mobile-menu-btn.open .hamburger span:nth-child(1) {
+      transform: translateY(6px) rotate(45deg);
+    }
+    
+    .mobile-menu-btn.open .hamburger span:nth-child(2) {
+      opacity: 0;
+    }
+    
+    .mobile-menu-btn.open .hamburger span:nth-child(3) {
+      transform: translateY(-6px) rotate(-45deg);
+    }
   </style>
 </head>
 
 <body class="h-screen w-screen overflow-hidden bg-neutral-50">
   
+  <!-- Mobile Menu Button -->
+  <button class="mobile-menu-btn" id="mobileMenuBtn" aria-label="Toggle menu">
+    <div class="hamburger">
+      <span></span>
+      <span></span>
+      <span></span>
+    </div>
+  </button>
+  
+  <!-- Backdrop for mobile -->
+  <div class="backdrop" id="backdrop"></div>
+  
   <!-- Header stretched across the top -->
   <header class="fixed top-0 left-0 right-0 flex items-center justify-between gap-3 p-4 border-b-2 border-black bg-white z-20">
     <div class="flex items-center gap-3">
-      <div id="brandLogo" class="shrink-0 grid place-items-center h-10 w-10 rounded-lg bg-white text-white font-bold cursor-pointer" title="Collapse/Expand">
-        <img src="./assets/MIT.svg" class="mr-[-40px] scale-[1.3] " >
+      <div id="brandLogo" class="shrink-0 grid place-items-center h-10 w-10 rounded-lg bg-white text-white font-bold cursor-pointer md:block hidden" title="Collapse/Expand">
+        <img src="./assets/MIT.svg" class="mr-[-40px] scale-[1.3]" >
       </div>
-    <div class="brand-text flex items-center gap-3">
-        <img src="./assets/SBX.png" class="h-8 ml-[55px] scale-[1.3] "/>
+      <div class="brand-text flex items-center gap-3">
+        <img src="./assets/SBX.png" class="h-8 md:ml-[55px] scale-[1.3]"/>
       </div>
     </div>
     <div class="flex items-center">
-      <img src="./assets/People_S.png" class="h-8 mr-[175px] scale-[1.4]"/>
+      <img src="./assets/People_S.png" class="h-8 md:mr-[175px] scale-[1.4]"/>
     </div>
   </header>
 
@@ -313,7 +480,7 @@
     
     <!-- Sidebar - Fixed position, overlays map -->
     <aside id="sidebar" class="sidebar bg-white border-r border-neutral-200 shadow-sm flex">
-      <!-- Expand/collapse bar - extends to bottom -->
+      <!-- Expand/collapse bar - extends to bottom (hidden on mobile) -->
       <div class="expand-bar" title="Click to expand/collapse sidebar"></div>
       
       <nav class="rail-justify flex flex-col items-center gap-2 p-3 border-r border-neutral-200" role="tablist" aria-orientation="vertical">
@@ -536,29 +703,65 @@
     const sidebar = document.getElementById('sidebar');
     const brandLogo = document.getElementById('brandLogo');
     const expandBar = document.querySelector('.expand-bar');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const backdrop = document.getElementById('backdrop');
+    
     const saved = localStorage.getItem('sidebar-collapsed');
     if (saved === 'true') sidebar.classList.add('collapsed');
     
+    // Function to check if mobile
+    const isMobile = () => window.innerWidth <= 767;
+    
     // Function to toggle sidebar
     const toggleSidebar = () => {
-      sidebar.classList.toggle('collapsed');
-      localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+      if (isMobile()) {
+        // Mobile: toggle open class and backdrop
+        sidebar.classList.toggle('open');
+        backdrop.classList.toggle('show');
+        mobileMenuBtn.classList.toggle('open');
+      } else {
+        // Desktop: toggle collapsed class
+        sidebar.classList.toggle('collapsed');
+        localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+      }
     };
     
-    // Click logo to toggle
-    brandLogo.addEventListener('click', toggleSidebar);
+    // Click logo to toggle (desktop only)
+    brandLogo?.addEventListener('click', () => {
+      if (!isMobile()) toggleSidebar();
+    });
     
-    // Click thin expand bar to toggle
-    expandBar.addEventListener('click', toggleSidebar);
+    // Click thin expand bar to toggle (desktop only)
+    expandBar?.addEventListener('click', () => {
+      if (!isMobile()) toggleSidebar();
+    });
+    
+    // Mobile menu button
+    mobileMenuBtn?.addEventListener('click', toggleSidebar);
+    
+    // Click backdrop to close sidebar (mobile only)
+    backdrop?.addEventListener('click', () => {
+      if (isMobile()) {
+        sidebar.classList.remove('open');
+        backdrop.classList.remove('show');
+        mobileMenuBtn.classList.remove('open');
+      }
+    });
 
     const railBtns = Array.from(document.querySelectorAll('.rail-btn'));
     const panels = Array.from(document.querySelectorAll('.tab-content'));
     
     function activateTab(id){
-      // Auto-expand sidebar if collapsed when clicking a button
-      if (sidebar.classList.contains('collapsed')) {
+      // Auto-expand sidebar when clicking a button
+      if (!isMobile() && sidebar.classList.contains('collapsed')) {
         sidebar.classList.remove('collapsed');
         localStorage.setItem('sidebar-collapsed', 'false');
+      }
+      
+      if (isMobile() && !sidebar.classList.contains('open')) {
+        sidebar.classList.add('open');
+        backdrop.classList.add('show');
+        mobileMenuBtn.classList.add('open');
       }
       
       railBtns.forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === id)));
@@ -1543,8 +1746,8 @@
       open = !open;
       bmPanel.classList.toggle("hidden", !open);
     });
-    const isMobile = () => matchMedia("(max-width: 767px)").matches;
-    const setInitialVisibility = () => bmPanel.classList.toggle("hidden", isMobile());
+    const isMobileBM = () => matchMedia("(max-width: 767px)").matches;
+    const setInitialVisibility = () => bmPanel.classList.toggle("hidden", isMobileBM());
     setInitialVisibility();
     addEventListener("resize", setInitialVisibility);
 
@@ -1692,7 +1895,7 @@
         bmPanel.querySelectorAll("button").forEach(b => b.classList.remove("ring", "ring-blue-500"));
         btn.classList.add("ring", "ring-blue-500");
         activeId = id;
-        if (isMobile()) { 
+        if (isMobileBM()) { 
           open = false; 
           bmPanel.classList.add("hidden"); 
         }
@@ -1947,22 +2150,6 @@
         });
         console.log('======================');
       }, 500);
-      
-      /* ORIGINAL FILTERING CODE - COMMENTED OUT FOR DEBUG
-      if (nodeNames.length === 0) {
-        // No nodes specified, hide all
-        map.setFilter(POI_LAYER.layerId, ['==', 'Name', '']);
-        console.log('No node names specified, hiding all POI points');
-      } else if (nodeNames.length === 1) {
-        // Single node name filter
-        map.setFilter(POI_LAYER.layerId, ['==', 'Name', nodeNames[0]]);
-        console.log('Filtering POI to show only:', nodeNames[0]);
-      } else {
-        // Multiple node names filter using 'in' operator
-        map.setFilter(POI_LAYER.layerId, ['in', 'Name', ...nodeNames]);
-        console.log('Filtering POI to show:', nodeNames);
-      }
-      */
     }
 
     // Function to show/hide POI intervention layer
